@@ -38,4 +38,9 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+# scratch/test scripts
+os_*.js
+os_*.html
+test_os.js
 next-env.d.ts

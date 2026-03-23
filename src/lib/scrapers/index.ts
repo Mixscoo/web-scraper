@@ -1,6 +1,7 @@
 import type { Job, ScraperResult } from "../types";
 import { isMiddleEastJob } from "../utils";
 import { jobStore } from "../job-store";
+import { categorizeOtherJobs } from "../ai-categorizer";
 import { LinkedInScraper } from "./linkedin";
 import { TalentScraper } from "./talent";
 import { JSearchScraper } from "./jsearch";
@@ -59,7 +60,31 @@ export async function scrapeAll(
   );
 
   const allJobs = results.flatMap((r) => r.jobs);
-  const deduped = deduplicateJobs(allJobs);
+  let deduped = deduplicateJobs(allJobs);
+
+  // Fallback: AI classification for "other" jobs
+  const otherJobsIndices = deduped
+    .map((j, idx) => (j.category === "other" ? idx : -1))
+    .filter((idx) => idx !== -1);
+
+  if (otherJobsIndices.length > 0) {
+    console.log(`[AI] Attempting to categorize ${otherJobsIndices.length} "other" jobs...`);
+    const titlesToCategorize = otherJobsIndices.map(idx => deduped[idx].title);
+    
+    // Batch process to avoid huge payload. (e.g. 50 titles at a time)
+    const BATCH_SIZE = 50;
+    for (let i = 0; i < titlesToCategorize.length; i += BATCH_SIZE) {
+      const batchTitles = titlesToCategorize.slice(i, i + BATCH_SIZE);
+      const batchIndices = otherJobsIndices.slice(i, i + BATCH_SIZE);
+      
+      const chunkCategories = await categorizeOtherJobs(batchTitles);
+      
+      chunkCategories.forEach((cat, offset) => {
+        const originalIdx = batchIndices[offset];
+        deduped[originalIdx].category = cat;
+      });
+    }
+  }
 
   // Filter out non-Middle-East jobs
   const meJobs = deduped.filter(isMiddleEastJob);

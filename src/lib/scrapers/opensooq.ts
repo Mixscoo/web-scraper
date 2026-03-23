@@ -45,7 +45,7 @@ export class OpensooqScraper extends BaseScraper {
             const title = $(el).find('h2').first().text().trim();
             
             if (title && title.length > 3) {
-              const fullText = $(el).text().trim().replace(/\\s+/g, ' ');
+              const fullText = $(el).text().trim().replace(/\s+/g, ' ');
               
               // Id extraction from href
               const id = href.split('/').pop() || href;
@@ -66,9 +66,11 @@ export class OpensooqScraper extends BaseScraper {
               const category = normalizeCategory(title);
 
               // Company mapping (often just individual names or "Independent Provider")
-              const company = "Independent Provider"; 
+              const company = "Independent Provider";
 
-              let salary = extractSalary(fullText) || extractSalary(title);
+              // Exact price extraction (avoids Cheerio string concatenation issues)
+              const rawPrice = $(el).find('.priceColor').text().trim() || $(el).find('[class*="price"]').text().trim();
+              let salary = extractSalary(title) || extractSalary(rawPrice) || extractSalary(fullText);
 
               jobs.push({
                 id: `os-${id}`,

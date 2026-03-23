@@ -6,7 +6,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line,
 } from "recharts";
-import { Briefcase, Globe, Radio, TrendingUp, Building2, MapPin, DollarSign, BarChart3 } from "lucide-react";
+import { Briefcase, Globe, Radio, TrendingUp, Building2, MapPin, DollarSign, BarChart3 , HelpCircle } from "lucide-react";
 import { useTheme } from "next-themes";
 import { COUNTRIES } from "@/lib/constants";
 import type { StatsData } from "@/lib/types";
@@ -42,6 +42,18 @@ export default function StatsPage() {
   const isDark = resolvedTheme === "dark";
   const chartColors = isDark ? CHART_COLORS_DARK : CHART_COLORS_LIGHT;
   const primaryColor = isDark ? "#FAFAFA" : "#0A0A0A";
+
+  const tooltipStyle = {
+    contentStyle: {
+      backgroundColor: "var(--card)",
+      border: "1px solid var(--card-border)",
+      borderRadius: 12,
+      fontSize: 12,
+      color: "var(--foreground)",
+    },
+    labelStyle: { color: "var(--foreground)" },
+    itemStyle: { color: "var(--foreground)" },
+  };
 
   const fetchStats = useCallback((country?: string) => {
     setLoading(true);
@@ -129,7 +141,7 @@ export default function StatsPage() {
               <StatCard icon={Briefcase} label="Total Providers" value={stats.totalJobs} delay={0} />
               <StatCard icon={Globe} label="Countries" value={stats.activeCountries} delay={0.1} />
               <StatCard icon={Radio} label="Sources" value={stats.activeSources} delay={0.2} />
-              <StatCard icon={TrendingUp} label="Top Category" value={stats.topCategory} delay={0.3} />
+              <StatCard icon={TrendingUp} label="Top Category" value={stats.topCategory.replace(/-/g, " ")} delay={0.3} />
             </div>
 
             {/* Charts Grid */}
@@ -148,15 +160,7 @@ export default function StatsPage() {
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
                       <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="var(--muted-fg)" />
                       <YAxis tick={{ fontSize: 11 }} stroke="var(--muted-fg)" />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "var(--card)",
-                          border: "1px solid var(--card-border)",
-                          borderRadius: 12,
-                          fontSize: 12,
-                          color: "var(--foreground)",
-                        }}
-                      />
+                      <Tooltip {...tooltipStyle} cursor={{ fill: "var(--card-border)" }} />
                       <Bar dataKey="count" fill={primaryColor} radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -181,24 +185,21 @@ export default function StatsPage() {
                         outerRadius={100}
                         dataKey="count"
                         nameKey="name"
-                        label={({ name }) => name}
+                        label={({ name, x, y, textAnchor }) => (
+                          <text x={x} y={y} textAnchor={textAnchor} fill="var(--foreground)" fontSize={10} className="capitalize">
+                            {name?.replace(/-/g, " ") || ""}
+                          </text>
+                        )}
                         labelLine={false}
                         fontSize={10}
                         fill="var(--foreground)"
+                        className="capitalize"
                       >
                         {stats.jobsByCategory.slice(0, 8).map((_, i) => (
                           <Cell key={i} fill={chartColors[i % chartColors.length]} />
                         ))}
                       </Pie>
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "var(--card)",
-                          border: "1px solid var(--card-border)",
-                          borderRadius: 12,
-                          fontSize: 12,
-                          color: "var(--foreground)",
-                        }}
-                      />
+                      <Tooltip {...tooltipStyle} />
                     </PieChart>
                   </ResponsiveContainer>
                 </motion.div>
@@ -218,15 +219,7 @@ export default function StatsPage() {
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
                       <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="var(--muted-fg)" />
                       <YAxis tick={{ fontSize: 11 }} stroke="var(--muted-fg)" />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "var(--card)",
-                          border: "1px solid var(--card-border)",
-                          borderRadius: 12,
-                          fontSize: 12,
-                          color: "var(--foreground)",
-                        }}
-                      />
+                      <Tooltip {...tooltipStyle} cursor={{ stroke: "var(--muted-fg)" }} />
                       <Line type="monotone" dataKey="count" stroke={primaryColor} strokeWidth={2} dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
@@ -247,15 +240,7 @@ export default function StatsPage() {
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
                       <XAxis type="number" tick={{ fontSize: 11 }} stroke="var(--muted-fg)" />
                       <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} width={100} stroke="var(--muted-fg)" />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "var(--card)",
-                          border: "1px solid var(--card-border)",
-                          borderRadius: 12,
-                          fontSize: 12,
-                          color: "var(--foreground)",
-                        }}
-                      />
+                      <Tooltip {...tooltipStyle} cursor={{ fill: "var(--card-border)" }} />
                       <Bar dataKey="count" radius={[0, 4, 4, 0]}>
                         {stats.jobsBySource.map((_, i) => (
                           <Cell key={i} fill={chartColors[i % chartColors.length]} />
@@ -283,15 +268,7 @@ export default function StatsPage() {
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
                       <XAxis dataKey="name" tick={{ fontSize: 10 }} stroke="var(--muted-fg)" angle={-25} textAnchor="end" height={60} />
                       <YAxis tick={{ fontSize: 11 }} stroke="var(--muted-fg)" />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "var(--card)",
-                          border: "1px solid var(--card-border)",
-                          borderRadius: 12,
-                          fontSize: 12,
-                          color: "var(--foreground)",
-                        }}
-                      />
+                      <Tooltip {...tooltipStyle} cursor={{ fill: "var(--card-border)" }} />
                       <Bar dataKey="count" fill={primaryColor} radius={[4, 4, 0, 0]}>
                         {stats.topCompanies.map((_, i) => (
                           <Cell key={i} fill={chartColors[i % chartColors.length]} />
@@ -334,12 +311,12 @@ export default function StatsPage() {
                           return [`${value} jobs (${pct}%)`, "Count"];
                         }}
                         contentStyle={{
-                          backgroundColor: "var(--card)",
-                          border: "1px solid var(--card-border)",
-                          borderRadius: 12,
-                          fontSize: 12,
-                          color: "var(--foreground)",
+                          ...tooltipStyle.contentStyle,
+                          textTransform: "capitalize",
                         }}
+                        labelStyle={tooltipStyle.labelStyle}
+                        itemStyle={tooltipStyle.itemStyle}
+                        cursor={{ fill: "var(--card-border)" }}
                       />
                       <Bar dataKey="count" radius={[0, 4, 4, 0]}>
                         {stats.demandRanking.map((_, i) => (
@@ -372,7 +349,11 @@ export default function StatsPage() {
                         outerRadius={100}
                         dataKey="count"
                         nameKey="name"
-                        label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
+                        label={({ name, percent, x, y, textAnchor }) => (
+                          <text x={x} y={y} textAnchor={textAnchor} fill="var(--foreground)" fontSize={10}>
+                            {`${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
+                          </text>
+                        )}
                         labelLine={false}
                         fontSize={10}
                         fill="var(--foreground)"
@@ -381,15 +362,7 @@ export default function StatsPage() {
                           <Cell key={i} fill={chartColors[i % chartColors.length]} />
                         ))}
                       </Pie>
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "var(--card)",
-                          border: "1px solid var(--card-border)",
-                          borderRadius: 12,
-                          fontSize: 12,
-                          color: "var(--foreground)",
-                        }}
-                      />
+                      <Tooltip {...tooltipStyle} />
                     </PieChart>
                   </ResponsiveContainer>
                 </motion.div>
@@ -462,6 +435,36 @@ export default function StatsPage() {
                   </div>
                 </motion.div>
               )}
+
+              {/* Unidentified Jobs Insight */}
+              {stats.otherJobTitles && stats.otherJobTitles.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.3 }}
+                  className="card p-6 lg:col-span-3"
+                >
+                  <div className="flex items-center gap-2 mb-4">
+                    <HelpCircle className="h-4 w-4 text-[var(--accent)]" />
+                    <h3 className="text-sm font-semibold text-black dark:text-white">Unidentified Jobs (Needs Mapping)</h3>
+                    <span className="text-xs text-neutral-400 dark:text-neutral-500 ml-auto">Top titles falling into "Other"</span>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <div className="flex flex-wrap gap-2">
+                      {stats.otherJobTitles.map((job, idx) => (
+                        <div key={idx} className="flex items-center gap-2 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-white/5 px-3 py-1.5 text-xs">
+                          <span className="text-neutral-700 dark:text-neutral-300">"{job.title}"</span>
+                          <span className="text-neutral-400 dark:text-neutral-500 font-mono bg-black/5 dark:bg-white/10 px-1.5 py-0.5 rounded-md">{job.count}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="mt-4 text-xs text-neutral-500 dark:text-neutral-400 italic">
+                      These roles failed standard classification and may be picked up by the AI fallback if enabled. Monitor these to expand the taxonomy.
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
             </div>
           </>
         )}

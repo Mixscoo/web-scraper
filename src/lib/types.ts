@@ -58,6 +58,7 @@ export interface StatsData {
   salaryByCategory: { category: string; min: number | null; avg: number | null; max: number | null; currency: string; count: number }[];
   jobsByCity: { name: string; count: number }[];
   companiesByCategory: { category: string; companies: { name: string; count: number }[] }[];
+  otherJobTitles: { title: string; count: number }[];
 }
 
 export interface ApiResponse {

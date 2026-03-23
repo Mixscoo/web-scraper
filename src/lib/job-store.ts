@@ -134,6 +134,18 @@ class JobStore {
         return bTotal - aTotal;
       });
 
+    // Extract top 10 unidentified jobs ("Other") to display on stats page
+    const otherTitlesCount = new Map<string, number>();
+    for (const j of jobs) {
+      if (j.category === "other") {
+        otherTitlesCount.set(j.title, (otherTitlesCount.get(j.title) || 0) + 1);
+      }
+    }
+    const otherJobTitles = Array.from(otherTitlesCount.entries())
+      .map(([title, count]) => ({ title, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+
     return {
       totalJobs: jobs.length,
       activeCountries: country ? 1 : countriesWithJobs.size,
@@ -148,6 +160,7 @@ class JobStore {
       salaryByCategory,
       jobsByCity,
       companiesByCategory,
+      otherJobTitles,
     };
   }
 

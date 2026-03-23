@@ -24,9 +24,8 @@ function applyFilters(
     sort: string;
   }
 ): Job[] {
-  // Always filter to only household/service categories
-  const validCategories = new Set(CATEGORY_IDS as readonly string[]);
-  let filtered = jobs.filter((j) => validCategories.has(j.category));
+  // Always filter out completely unidentifiable garbage ("other")
+  let filtered = jobs.filter((j) => j.category !== "other");
 
   // Date filter
   if (opts.datePosted !== "all") {

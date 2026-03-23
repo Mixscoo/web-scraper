@@ -44,3 +44,7 @@ os_*.js
 os_*.html
 test_os.js
 next-env.d.ts
+
+fix_*.js
+os_*.ts
+stats_output.json

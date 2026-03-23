@@ -38,17 +38,17 @@ export function JobDetailModal({ job, onClose }: JobDetailModalProps) {
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="fixed inset-x-4 bottom-0 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:bottom-8 sm:max-w-2xl sm:w-full z-50 max-h-[85vh] overflow-hidden"
           >
-            <div className="bg-white dark:bg-gray-900 rounded-t-3xl sm:rounded-3xl border border-gray-200/50 dark:border-white/10 shadow-2xl overflow-y-auto max-h-[85vh]">
+            <div className="bg-white dark:bg-neutral-900 rounded-t-3xl sm:rounded-3xl border border-black/[0.06] dark:border-white/[0.08] shadow-2xl overflow-y-auto max-h-[85vh]">
               {/* Header */}
-              <div className="sticky top-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl p-6 pb-4 border-b border-gray-100 dark:border-white/5">
+              <div className="sticky top-0 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-xl p-6 pb-4 border-b border-neutral-100 dark:border-white/5">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <span className="source-badge mb-2 inline-block">{job.sourceName}</span>
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">{job.title}</h2>
+                    <h2 className="text-xl font-bold text-black dark:text-white">{job.title}</h2>
                   </div>
                   <button
                     onClick={onClose}
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors shrink-0"
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-100 dark:bg-white/10 hover:bg-neutral-200 dark:hover:bg-white/20 transition-colors shrink-0"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -59,20 +59,20 @@ export function JobDetailModal({ job, onClose }: JobDetailModalProps) {
               <div className="p-6 space-y-5">
                 {/* Meta */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                    <Building2 className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                  <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
+                    <Building2 className="h-4 w-4 text-neutral-400 dark:text-neutral-500" />
                     {job.company}
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                    <MapPin className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                  <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
+                    <MapPin className="h-4 w-4 text-neutral-400 dark:text-neutral-500" />
                     {job.location}
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                    <Clock className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                  <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
+                    <Clock className="h-4 w-4 text-neutral-400 dark:text-neutral-500" />
                     Data Last Scraped: {formatDate(job.postedDate)}
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                    <Tag className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                  <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
+                    <Tag className="h-4 w-4 text-neutral-400 dark:text-neutral-500" />
                     {job.category}
                   </div>
                 </div>
@@ -85,27 +85,27 @@ export function JobDetailModal({ job, onClose }: JobDetailModalProps) {
 
                 {/* Description */}
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Description</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-line">
+                  <h4 className="text-sm font-semibold text-black dark:text-white mb-2">Description</h4>
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed whitespace-pre-line">
                     {job.description}
                   </p>
                 </div>
               </div>
 
               {/* Footer */}
-              <div className="sticky bottom-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl p-6 pt-4 border-t border-gray-100 dark:border-white/5 flex gap-3">
+              <div className="sticky bottom-0 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-xl p-6 pt-4 border-t border-neutral-100 dark:border-white/5 flex gap-3">
                 <a
                   href={job.sourceUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl bg-indigo-600 hover:bg-indigo-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-white font-medium text-sm transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl bg-black hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-black font-medium text-sm transition-colors"
                 >
                   View on {job.sourceName}
                   <ExternalLink className="h-4 w-4" />
                 </a>
                 <button
                   onClick={handleCopyLink}
-                  className="flex items-center justify-center h-11 w-11 rounded-xl bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors"
+                  className="flex items-center justify-center h-11 w-11 rounded-xl bg-neutral-100 dark:bg-white/10 hover:bg-neutral-200 dark:hover:bg-white/20 transition-colors"
                   title="Copy link"
                 >
                   <Share2 className="h-4 w-4" />

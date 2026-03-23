@@ -52,7 +52,7 @@ export function SearchBar({ value, onChange, onSearch }: SearchBarProps) {
     <div ref={wrapperRef} className="relative w-full max-w-2xl mx-auto">
       <form onSubmit={handleSubmit} className="relative">
         <div className="relative flex items-center">
-          <Search className="absolute left-4 h-5 w-5 text-gray-400 dark:text-gray-500" />
+          <Search className="absolute left-4 h-5 w-5 text-neutral-400 dark:text-neutral-500" />
           <input
             ref={inputRef}
             type="text"
@@ -60,20 +60,20 @@ export function SearchBar({ value, onChange, onSearch }: SearchBarProps) {
             onChange={(e) => onChange(e.target.value)}
             onFocus={() => recentSearches.length > 0 && setShowRecent(true)}
             placeholder="Filter by keyword... e.g. Engineer, Nurse, Driver"
-            className="w-full h-14 pl-12 pr-24 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 shadow-lg shadow-black/5 dark:shadow-black/20 text-base text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:focus:ring-amber-500/50 focus:border-indigo-500 dark:focus:border-amber-500 transition-all"
+            className="w-full h-14 pl-12 pr-24 rounded-2xl bg-white dark:bg-[#141414] border border-black/[0.08] dark:border-white/[0.08] shadow-lg shadow-black/5 dark:shadow-black/20 text-base text-black dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-black/10 dark:focus:ring-white/10 focus:border-neutral-400 dark:focus:border-neutral-500 transition-all"
           />
           {value && (
             <button
               type="button"
               onClick={() => onChange("")}
-              className="absolute right-20 p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+              className="absolute right-20 p-1.5 rounded-full hover:bg-neutral-100 dark:hover:bg-white/10 transition-colors"
             >
-              <X className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+              <X className="h-4 w-4 text-neutral-400 dark:text-neutral-500" />
             </button>
           )}
           <button
             type="submit"
-            className="absolute right-2 h-10 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-white text-sm font-medium transition-colors"
+            className="absolute right-2 h-10 px-5 rounded-xl bg-black hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-black text-sm font-medium transition-colors"
           >
             Search
           </button>
@@ -82,17 +82,17 @@ export function SearchBar({ value, onChange, onSearch }: SearchBarProps) {
 
       {/* Recent searches dropdown */}
       {showRecent && recentSearches.length > 0 && (
-        <div className="absolute top-full mt-2 w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-xl shadow-xl overflow-hidden z-20">
-          <div className="px-4 py-2 text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+        <div className="absolute top-full mt-2 w-full bg-white dark:bg-[#141414] border border-black/[0.08] dark:border-white/[0.08] rounded-xl shadow-xl overflow-hidden z-20">
+          <div className="px-4 py-2 text-xs font-medium text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">
             Recent Searches
           </div>
           {recentSearches.map((search) => (
             <button
               key={search}
               onClick={() => selectRecent(search)}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-left"
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-white/5 transition-colors text-left"
             >
-              <Search className="h-3.5 w-3.5 text-gray-400 dark:text-gray-500" />
+              <Search className="h-3.5 w-3.5 text-neutral-400 dark:text-neutral-500" />
               {search}
             </button>
           ))}

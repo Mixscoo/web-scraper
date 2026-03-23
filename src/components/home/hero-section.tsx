@@ -46,7 +46,7 @@ export function HeroSection() {
       className="relative min-h-screen flex items-center justify-center overflow-hidden"
     >
       {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-indigo-50/50 via-white to-white dark:from-indigo-950/40 dark:via-gray-900 dark:to-gray-950" />
+      <div className="absolute inset-0 bg-gradient-to-b from-neutral-50/50 via-white to-white dark:from-neutral-950/40 dark:via-[#0A0A0A] dark:to-[#0A0A0A]" />
 
       {/* Grid pattern */}
       <div
@@ -76,7 +76,7 @@ export function HeroSection() {
                 ease: "easeInOut",
               }}
             >
-              <Icon className="h-8 w-8 sm:h-12 sm:w-12 text-indigo-600 dark:text-amber-400" />
+              <Icon className="h-8 w-8 sm:h-12 sm:w-12 text-black dark:text-white" />
             </motion.div>
           </motion.div>
         ))}
@@ -84,8 +84,8 @@ export function HeroSection() {
 
       {/* Glowing orbs */}
       <motion.div className="absolute inset-0 parallax-layer" style={{ y: y2 }}>
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full bg-indigo-400/10 dark:bg-indigo-600/10 blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-amber-400/10 dark:bg-amber-600/10 blur-3xl" />
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full bg-neutral-400/10 dark:bg-neutral-600/10 blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-[var(--accent)]/10 dark:bg-[var(--accent)]/10 blur-3xl" />
       </motion.div>
 
       {/* Content (parallax layer 2 — medium) */}
@@ -98,29 +98,29 @@ export function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200/50 dark:border-indigo-500/20 text-sm text-indigo-600 dark:text-indigo-400 mb-8">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.08] dark:border-white/[0.1] text-sm text-neutral-600 dark:text-neutral-300 mb-8">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500" />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent)] opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--accent)]" />
             </span>
             Real-time scraping from 6+ sources
           </div>
         </motion.div>
 
         <motion.h1
-          className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight text-gray-900 dark:text-white leading-[1.1]"
+          className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight text-black dark:text-white leading-[1.1]"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
         >
           Discover Jobs{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-amber-400 dark:to-orange-500">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent)] to-neutral-500 dark:from-[var(--accent)] dark:to-neutral-400">
             Across the Middle East
           </span>
         </motion.h1>
 
         <motion.p
-          className="mt-6 text-lg sm:text-xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed"
+          className="mt-6 text-lg sm:text-xl text-neutral-500 dark:text-neutral-400 max-w-2xl mx-auto leading-relaxed"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
@@ -137,7 +137,7 @@ export function HeroSection() {
         >
           <Link
             href="/jobs"
-            className="group flex items-center gap-2 px-8 py-3.5 rounded-full bg-indigo-600 hover:bg-indigo-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-white font-medium text-base shadow-lg shadow-indigo-600/25 dark:shadow-amber-500/25 transition-all hover:scale-105"
+            className="group flex items-center gap-2 px-8 py-3.5 rounded-full bg-black hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-black font-medium text-base shadow-lg shadow-black/10 dark:shadow-white/10 transition-all hover:scale-105"
           >
             <Globe className="h-4 w-4" />
             Start Browsing
@@ -145,7 +145,7 @@ export function HeroSection() {
           </Link>
           <Link
             href="/sources"
-            className="flex items-center gap-2 px-8 py-3.5 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-white/10 dark:hover:bg-white/15 text-gray-700 dark:text-gray-300 font-medium text-base transition-all hover:scale-105"
+            className="flex items-center gap-2 px-8 py-3.5 rounded-full bg-neutral-100 hover:bg-neutral-200 dark:bg-white/10 dark:hover:bg-white/15 text-neutral-700 dark:text-neutral-300 font-medium text-base transition-all hover:scale-105"
           >
             View Sources
           </Link>
@@ -159,9 +159,9 @@ export function HeroSection() {
         transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         style={{ opacity }}
       >
-        <div className="w-6 h-10 rounded-full border-2 border-gray-300 dark:border-gray-600 flex items-start justify-center p-1.5">
+        <div className="w-6 h-10 rounded-full border-2 border-neutral-300 dark:border-neutral-600 flex items-start justify-center p-1.5">
           <motion.div
-            className="w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-gray-500"
+            className="w-1.5 h-1.5 rounded-full bg-neutral-400 dark:bg-neutral-500"
             animate={{ y: [0, 16, 0] }}
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           />

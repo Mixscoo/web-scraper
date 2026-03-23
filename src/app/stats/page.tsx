@@ -12,8 +12,8 @@ import { COUNTRIES } from "@/lib/constants";
 import type { StatsData } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const CHART_COLORS_LIGHT = ["#4F46E5", "#7C3AED", "#EC4899", "#F59E0B", "#10B981", "#06B6D4", "#8B5CF6", "#F97316", "#EF4444", "#3B82F6"];
-const CHART_COLORS_DARK = ["#F59E0B", "#FBBF24", "#F97316", "#FB923C", "#A78BFA", "#34D399", "#38BDF8", "#FB7185", "#C084FC", "#2DD4BF"];
+const CHART_COLORS_LIGHT = ["#111111", "#B8860B", "#2E8B57", "#C05746", "#3A6EA5", "#8B5DA0", "#5D8A3C", "#D4763A", "#2A7B8E", "#A67C3D"];
+const CHART_COLORS_DARK = ["#F5F5F5", "#E8C44A", "#4ADE80", "#F87171", "#60A5FA", "#C084FC", "#86D460", "#FB923C", "#38BDF8", "#FBBF24"];
 
 function StatCard({ icon: Icon, label, value, delay }: { icon: typeof Briefcase; label: string; value: string | number; delay: number }) {
   return (
@@ -24,12 +24,12 @@ function StatCard({ icon: Icon, label, value, delay }: { icon: typeof Briefcase;
       className="card p-6"
     >
       <div className="flex items-center gap-3 mb-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-amber-400">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-black/[0.04] dark:bg-white/[0.06] text-black dark:text-white">
           <Icon className="h-5 w-5" />
         </div>
-        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{label}</span>
+        <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">{label}</span>
       </div>
-      <p className="text-3xl font-bold text-gray-900 dark:text-white">{typeof value === "number" ? value.toLocaleString() : value}</p>
+      <p className="text-3xl font-bold text-black dark:text-white">{typeof value === "number" ? value.toLocaleString() : value}</p>
     </motion.div>
   );
 }
@@ -41,7 +41,7 @@ export default function StatsPage() {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
   const chartColors = isDark ? CHART_COLORS_DARK : CHART_COLORS_LIGHT;
-  const primaryColor = isDark ? "#F59E0B" : "#4F46E5";
+  const primaryColor = isDark ? "#FAFAFA" : "#0A0A0A";
 
   const fetchStats = useCallback((country?: string) => {
     setLoading(true);
@@ -66,8 +66,8 @@ export default function StatsPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Statistics</h1>
-          <p className="mt-2 text-gray-500 dark:text-gray-400">Overview of scraped provider & listing data across the Middle East.</p>
+          <h1 className="text-3xl font-bold text-black dark:text-white">Statistics</h1>
+          <p className="mt-2 text-neutral-500 dark:text-neutral-400">Overview of scraped provider & listing data across the Middle East.</p>
         </motion.div>
 
         {/* Country Selector */}
@@ -77,8 +77,8 @@ export default function StatsPage() {
             className={cn(
               "px-4 py-2 rounded-xl text-sm font-medium transition-colors",
               !selectedCountry
-                ? "bg-indigo-600 dark:bg-amber-500 text-white"
-                : "bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10"
+                ? "bg-black dark:bg-white text-white dark:text-black"
+                : "bg-neutral-100 dark:bg-white/5 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-white/10"
             )}
           >
             All Countries
@@ -90,8 +90,8 @@ export default function StatsPage() {
               className={cn(
                 "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors",
                 selectedCountry === c.name
-                  ? "bg-indigo-600 dark:bg-amber-500 text-white"
-                  : "bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10"
+                  ? "bg-black dark:bg-white text-white dark:text-black"
+                  : "bg-neutral-100 dark:bg-white/5 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-white/10"
               )}
             >
               <img
@@ -108,15 +108,15 @@ export default function StatsPage() {
 
         {loading || !stats ? (
           <div className="flex items-center justify-center py-20">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-600 dark:border-amber-400 border-t-transparent" />
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-black dark:border-white border-t-transparent" />
           </div>
         ) : stats.totalJobs === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-white/5 flex items-center justify-center">
-              <Briefcase className="h-8 w-8 text-gray-300 dark:text-gray-600" />
+            <div className="w-16 h-16 rounded-2xl bg-neutral-100 dark:bg-white/5 flex items-center justify-center">
+              <Briefcase className="h-8 w-8 text-neutral-300 dark:text-neutral-600" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">No data yet</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm">
+            <h3 className="text-lg font-semibold text-black dark:text-white">No data yet</h3>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-sm">
               {selectedCountry
                 ? `No jobs have been scraped for ${selectedCountry} yet. Go to the Jobs page and browse this country first.`
                 : "No jobs have been scraped yet. Go to the Jobs page and browse a country to start collecting data."}
@@ -142,7 +142,7 @@ export default function StatsPage() {
                   transition={{ delay: 0.4 }}
                   className="card p-6"
                 >
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Providers by Country</h3>
+                  <h3 className="text-sm font-semibold text-black dark:text-white mb-4">Providers by Country</h3>
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={stats.jobsByCountry}>
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
@@ -171,7 +171,7 @@ export default function StatsPage() {
                   transition={{ delay: 0.5 }}
                   className="card p-6"
                 >
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Providers by Category</h3>
+                  <h3 className="text-sm font-semibold text-black dark:text-white mb-4">Providers by Category</h3>
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                       <Pie
@@ -212,7 +212,7 @@ export default function StatsPage() {
                   transition={{ delay: 0.6 }}
                   className="card p-6"
                 >
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Providers Over Time</h3>
+                  <h3 className="text-sm font-semibold text-black dark:text-white mb-4">Providers Over Time</h3>
                   <ResponsiveContainer width="100%" height={300}>
                     <LineChart data={stats.jobsOverTime}>
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
@@ -241,7 +241,7 @@ export default function StatsPage() {
                   transition={{ delay: 0.7 }}
                   className="card p-6"
                 >
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Listings by Source</h3>
+                  <h3 className="text-sm font-semibold text-black dark:text-white mb-4">Listings by Source</h3>
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={stats.jobsBySource} layout="vertical">
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
@@ -275,8 +275,8 @@ export default function StatsPage() {
                   className="card p-6 lg:col-span-2"
                 >
                   <div className="flex items-center gap-2 mb-4">
-                    <Building2 className="h-4 w-4 text-indigo-600 dark:text-amber-400" />
-                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Top Companies</h3>
+                    <Building2 className="h-4 w-4 text-black dark:text-white" />
+                    <h3 className="text-sm font-semibold text-black dark:text-white">Top Companies</h3>
                   </div>
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={stats.topCompanies}>
@@ -305,8 +305,8 @@ export default function StatsPage() {
 
             {/* Market Intelligence Section */}
             <div className="mt-10 mb-6">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Market Intelligence</h2>
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Provider demand analysis, salary benchmarks, and geographic breakdown.</p>
+              <h2 className="text-xl font-bold text-black dark:text-white">Market Intelligence</h2>
+              <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Provider demand analysis, salary benchmarks, and geographic breakdown.</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -319,9 +319,9 @@ export default function StatsPage() {
                   className="card p-6 lg:col-span-2"
                 >
                   <div className="flex items-center gap-2 mb-4">
-                    <BarChart3 className="h-4 w-4 text-indigo-600 dark:text-amber-400" />
-                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Service Demand Ranking</h3>
-                    <span className="text-xs text-gray-400 dark:text-gray-500 ml-auto">Which services are most in demand</span>
+                    <BarChart3 className="h-4 w-4 text-black dark:text-white" />
+                    <h3 className="text-sm font-semibold text-black dark:text-white">Service Demand Ranking</h3>
+                    <span className="text-xs text-neutral-400 dark:text-neutral-500 ml-auto">Which services are most in demand</span>
                   </div>
                   <ResponsiveContainer width="100%" height={Math.max(300, stats.demandRanking.length * 28)}>
                     <BarChart data={stats.demandRanking} layout="vertical" margin={{ left: 10 }}>
@@ -360,8 +360,8 @@ export default function StatsPage() {
                   className="card p-6"
                 >
                   <div className="flex items-center gap-2 mb-4">
-                    <MapPin className="h-4 w-4 text-indigo-600 dark:text-amber-400" />
-                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Providers by City</h3>
+                    <MapPin className="h-4 w-4 text-black dark:text-white" />
+                    <h3 className="text-sm font-semibold text-black dark:text-white">Providers by City</h3>
                   </div>
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
@@ -404,26 +404,26 @@ export default function StatsPage() {
                   className="card p-6"
                 >
                   <div className="flex items-center gap-2 mb-4">
-                    <DollarSign className="h-4 w-4 text-indigo-600 dark:text-amber-400" />
-                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Salary Ranges by Service</h3>
+                    <DollarSign className="h-4 w-4 text-black dark:text-white" />
+                    <h3 className="text-sm font-semibold text-black dark:text-white">Salary Ranges by Service</h3>
                   </div>
                   <div className="overflow-y-auto max-h-[300px]">
                     <table className="w-full text-sm">
-                      <thead className="sticky top-0 bg-white dark:bg-gray-900">
-                        <tr className="border-b border-gray-200 dark:border-gray-700">
-                          <th className="text-left py-2 font-medium text-gray-500 dark:text-gray-400">Service</th>
-                          <th className="text-right py-2 font-medium text-gray-500 dark:text-gray-400">Min</th>
-                          <th className="text-right py-2 font-medium text-gray-500 dark:text-gray-400">Avg</th>
-                          <th className="text-right py-2 font-medium text-gray-500 dark:text-gray-400">Max</th>
+                      <thead className="sticky top-0 bg-white dark:bg-[#141414]">
+                        <tr className="border-b border-black/[0.06] dark:border-white/[0.08]">
+                          <th className="text-left py-2 font-medium text-neutral-500 dark:text-neutral-400">Service</th>
+                          <th className="text-right py-2 font-medium text-neutral-500 dark:text-neutral-400">Min</th>
+                          <th className="text-right py-2 font-medium text-neutral-500 dark:text-neutral-400">Avg</th>
+                          <th className="text-right py-2 font-medium text-neutral-500 dark:text-neutral-400">Max</th>
                         </tr>
                       </thead>
                       <tbody>
                         {stats.salaryByCategory.map((row) => (
-                          <tr key={row.category} className="border-b border-gray-100 dark:border-gray-800">
-                            <td className="py-2 text-gray-900 dark:text-gray-200 capitalize">{row.category}</td>
-                            <td className="py-2 text-right text-gray-600 dark:text-gray-400">{row.currency} {row.min?.toLocaleString()}</td>
+                          <tr key={row.category} className="border-b border-black/[0.04] dark:border-white/[0.04]">
+                            <td className="py-2 text-black dark:text-neutral-200 capitalize">{row.category}</td>
+                            <td className="py-2 text-right text-neutral-600 dark:text-neutral-400">{row.currency} {row.min?.toLocaleString()}</td>
                             <td className="py-2 text-right font-medium text-green-600 dark:text-green-400">{row.currency} {row.avg?.toLocaleString()}</td>
-                            <td className="py-2 text-right text-gray-600 dark:text-gray-400">{row.currency} {row.max?.toLocaleString()}</td>
+                            <td className="py-2 text-right text-neutral-600 dark:text-neutral-400">{row.currency} {row.max?.toLocaleString()}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -441,19 +441,19 @@ export default function StatsPage() {
                   className="card p-6 lg:col-span-2"
                 >
                   <div className="flex items-center gap-2 mb-4">
-                    <Building2 className="h-4 w-4 text-indigo-600 dark:text-amber-400" />
-                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Provider Landscape by Service</h3>
-                    <span className="text-xs text-gray-400 dark:text-gray-500 ml-auto">Top companies per category</span>
+                    <Building2 className="h-4 w-4 text-black dark:text-white" />
+                    <h3 className="text-sm font-semibold text-black dark:text-white">Provider Landscape by Service</h3>
+                    <span className="text-xs text-neutral-400 dark:text-neutral-500 ml-auto">Top companies per category</span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[400px] overflow-y-auto">
                     {stats.companiesByCategory.slice(0, 12).map((cat) => (
-                      <div key={cat.category} className="rounded-xl bg-gray-50 dark:bg-white/5 p-3">
-                        <h4 className="text-xs font-semibold text-indigo-600 dark:text-amber-400 uppercase tracking-wider mb-2 capitalize">{cat.category}</h4>
+                      <div key={cat.category} className="rounded-xl bg-neutral-50 dark:bg-white/5 p-3">
+                        <h4 className="text-xs font-semibold text-[var(--accent)] uppercase tracking-wider mb-2 capitalize">{cat.category}</h4>
                         <ul className="space-y-1">
                           {cat.companies.map((company) => (
                             <li key={company.name} className="flex justify-between text-xs">
-                              <span className="text-gray-700 dark:text-gray-300 truncate mr-2">{company.name}</span>
-                              <span className="text-gray-400 dark:text-gray-500 flex-shrink-0">{company.count}</span>
+                              <span className="text-neutral-700 dark:text-neutral-300 truncate mr-2">{company.name}</span>
+                              <span className="text-neutral-400 dark:text-neutral-500 flex-shrink-0">{company.count}</span>
                             </li>
                           ))}
                         </ul>

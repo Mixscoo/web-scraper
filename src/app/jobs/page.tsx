@@ -19,7 +19,7 @@ export default function JobsPage() {
     <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-indigo-600 dark:text-amber-400" />
+          <Loader2 className="h-8 w-8 animate-spin text-black dark:text-white" />
         </div>
       }
     >
@@ -88,7 +88,7 @@ function JobsContent() {
   if (!hasCountry) {
     return (
       <div className="min-h-screen">
-        <div className="border-b border-gray-200/50 dark:border-white/10 bg-white/50 dark:bg-gray-950/50 backdrop-blur-xl">
+        <div className="border-b border-black/[0.06] dark:border-white/[0.08] bg-white/50 dark:bg-black/50 backdrop-blur-xl">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -96,14 +96,14 @@ function JobsContent() {
               transition={{ duration: 0.5 }}
               className="text-center"
             >
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200/50 dark:border-indigo-500/20 text-sm text-indigo-600 dark:text-indigo-400 mb-6">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.08] dark:border-white/[0.1] text-sm text-neutral-600 dark:text-neutral-300 mb-6">
                 <Globe className="h-4 w-4" />
                 Select a country to discover jobs
               </div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-3">
+              <h1 className="text-3xl sm:text-4xl font-bold text-black dark:text-white mb-3">
                 Browse Jobs by Country
               </h1>
-              <p className="text-gray-500 dark:text-gray-400 max-w-lg mx-auto">
+              <p className="text-neutral-500 dark:text-neutral-400 max-w-lg mx-auto">
                 Choose a country to scrape and discover available job listings across the Middle East.
               </p>
             </motion.div>
@@ -119,13 +119,13 @@ function JobsContent() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3, delay: i * 0.04 }}
                 onClick={() => selectCountry(country.name)}
-                className="card flex flex-col items-center gap-3 p-6 hover:scale-105 hover:border-indigo-300 dark:hover:border-amber-500/30 transition-all text-center group cursor-pointer"
+                className="card flex flex-col items-center gap-3 p-6 hover:scale-105 hover:border-neutral-400 dark:hover:border-neutral-500 transition-all text-center group cursor-pointer"
               >
                 <CountryFlag code={country.code} size={48} />
-                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                <span className="text-sm font-medium text-black dark:text-white">
                   {country.name}
                 </span>
-                <span className="text-xs text-gray-400 dark:text-gray-500 group-hover:text-indigo-500 dark:group-hover:text-amber-400 transition-colors">
+                <span className="text-xs text-neutral-400 dark:text-neutral-500 group-hover:text-[var(--accent)] transition-colors">
                   Discover jobs &rarr;
                 </span>
               </motion.button>
@@ -140,12 +140,12 @@ function JobsContent() {
   return (
     <div className="min-h-screen">
       {/* Header with back button + search */}
-      <div className="border-b border-gray-200/50 dark:border-white/10 bg-white/50 dark:bg-gray-950/50 backdrop-blur-xl">
+      <div className="border-b border-black/[0.06] dark:border-white/[0.08] bg-white/50 dark:bg-black/50 backdrop-blur-xl">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center gap-3 mb-4">
             <button
               onClick={goBack}
-              className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+              className="flex items-center gap-1.5 text-sm text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />
               All countries
@@ -158,7 +158,7 @@ function JobsContent() {
             className="flex items-center gap-3 mb-6"
           >
             <CountryFlag code={COUNTRIES.find((c) => c.name === filters.countries[0])?.code ?? "jo"} size={40} />
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-2xl sm:text-3xl font-bold text-black dark:text-white">
               Jobs in {filters.countries[0]}
             </h1>
           </motion.div>
@@ -181,18 +181,18 @@ function JobsContent() {
             {hasCountry && (
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
                     {isLoading ? (
                       "Scraping jobs..."
                     ) : (
                       <>
-                        <span className="font-semibold text-gray-900 dark:text-white">{data?.total ?? 0}</span>{" "}
+                        <span className="font-semibold text-black dark:text-white">{data?.total ?? 0}</span>{" "}
                         jobs found
                         {data?.sources && data.sources.length > 0 && (
                           <> from <span className="font-medium">{data.sources.length}</span> sources</>
                         )}
                         {data?.cachedAt && (
-                          <span className="text-xs text-gray-400 ml-2">(cached)</span>
+                      <span className="text-xs text-neutral-400 ml-2">(cached)</span>
                         )}
                       </>
                     )}
@@ -202,7 +202,7 @@ function JobsContent() {
                   <ExportButton query={filters.query} country={filters.countries[0] || "Jordan"} />
                   <button
                     onClick={() => setShowFilters(true)}
-                    className="md:hidden flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15 text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors"
+                    className="md:hidden flex items-center gap-2 px-4 py-2 rounded-xl bg-neutral-100 dark:bg-white/10 hover:bg-neutral-200 dark:hover:bg-white/15 text-sm font-medium text-neutral-700 dark:text-neutral-300 transition-colors"
                   >
                     <SlidersHorizontal className="h-4 w-4" />
                     Filters
@@ -215,11 +215,11 @@ function JobsContent() {
             {(filters.categories.length > 0 || filters.sources.length > 0 || filters.query) && (
               <div className="flex flex-wrap gap-2 mb-4">
                 {filters.query && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-green-50 dark:bg-green-500/10 text-xs font-medium text-green-600 dark:text-green-400">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-black/[0.04] dark:bg-white/[0.06] text-xs font-medium text-black dark:text-white">
                     &ldquo;{filters.query}&rdquo;
                     <button
                       onClick={() => { setFilters((f) => ({ ...f, query: "", page: 1 })); setSearchQuery(""); }}
-                      className="ml-0.5 hover:text-green-800 dark:hover:text-green-300"
+                      className="ml-0.5 hover:text-neutral-600 dark:hover:text-neutral-300"
                     >
                       &times;
                     </button>
@@ -228,14 +228,14 @@ function JobsContent() {
                 {filters.categories.map((c) => (
                   <span
                     key={c}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-50 dark:bg-purple-500/10 text-xs font-medium text-purple-600 dark:text-purple-400"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-black/[0.04] dark:bg-white/[0.06] text-xs font-medium text-neutral-600 dark:text-neutral-300"
                   >
                     {c}
                     <button
                       onClick={() =>
                         setFilters((f) => ({ ...f, categories: f.categories.filter((x) => x !== c), page: 1 }))
                       }
-                      className="ml-0.5 hover:text-purple-800 dark:hover:text-purple-300"
+                      className="ml-0.5 hover:text-neutral-800 dark:hover:text-neutral-200"
                     >
                       &times;
                     </button>
@@ -247,8 +247,8 @@ function JobsContent() {
             {/* Loading state */}
             {isLoading && (
               <div className="flex flex-col items-center justify-center py-20 gap-4">
-                <Loader2 className="h-8 w-8 animate-spin text-indigo-600 dark:text-amber-400" />
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <Loader2 className="h-8 w-8 animate-spin text-black dark:text-white" />
+                <p className="text-sm text-neutral-500 dark:text-neutral-400">
                   Scraping jobs from multiple sources...
                 </p>
               </div>
@@ -257,11 +257,11 @@ function JobsContent() {
             {/* No results */}
             {!isLoading && displayJobs.length === 0 && (
               <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-white/5 flex items-center justify-center">
-                  <SearchX className="h-8 w-8 text-gray-300 dark:text-gray-600" />
+                <div className="w-16 h-16 rounded-2xl bg-neutral-100 dark:bg-white/5 flex items-center justify-center">
+                  <SearchX className="h-8 w-8 text-neutral-300 dark:text-neutral-600" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">No jobs found</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm">
+                <h3 className="text-lg font-semibold text-black dark:text-white">No jobs found</h3>
+                <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-sm">
                   Try adjusting your filters or search keyword.
                 </p>
               </div>
@@ -287,17 +287,17 @@ function JobsContent() {
                     <button
                       onClick={() => setFilters((f) => ({ ...f, page: f.page - 1 }))}
                       disabled={filters.page <= 1}
-                      className="px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      className="px-4 py-2 rounded-xl text-sm font-medium bg-neutral-100 dark:bg-white/10 hover:bg-neutral-200 dark:hover:bg-white/15 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     >
                       Previous
                     </button>
-                    <span className="text-sm text-gray-500 dark:text-gray-400 px-4">
+                    <span className="text-sm text-neutral-500 dark:text-neutral-400 px-4">
                       Page {data.page} of {data.totalPages}
                     </span>
                     <button
                       onClick={() => setFilters((f) => ({ ...f, page: f.page + 1 }))}
                       disabled={filters.page >= data.totalPages}
-                      className="px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      className="px-4 py-2 rounded-xl text-sm font-medium bg-neutral-100 dark:bg-white/10 hover:bg-neutral-200 dark:hover:bg-white/15 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     >
                       Next
                     </button>
@@ -318,7 +318,7 @@ function JobsContent() {
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="absolute inset-x-0 bottom-0 max-h-[80vh] overflow-y-auto bg-white dark:bg-gray-900 rounded-t-3xl p-6"
+            className="absolute inset-x-0 bottom-0 max-h-[80vh] overflow-y-auto bg-white dark:bg-neutral-900 rounded-t-3xl p-6"
           >
             <FilterPanel filters={filters} onChange={setFilters} onClose={() => setShowFilters(false)} />
           </motion.div>

@@ -40,12 +40,12 @@ export function FilterPanel({ filters, onChange, onClose, className }: FilterPan
     <aside className={cn("space-y-6", className)}>
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Filters</h3>
+        <h3 className="text-sm font-semibold text-black dark:text-white">Filters</h3>
         <div className="flex items-center gap-2">
           {hasActiveFilters && (
             <button
               onClick={clearAll}
-              className="text-xs text-indigo-600 dark:text-amber-400 hover:underline"
+              className="text-xs text-[var(--accent)] hover:underline"
             >
               Clear all
             </button>
@@ -53,7 +53,7 @@ export function FilterPanel({ filters, onChange, onClose, className }: FilterPan
           {onClose && (
             <button
               onClick={onClose}
-              className="md:hidden p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10"
+              className="md:hidden p-1 rounded-lg hover:bg-neutral-100 dark:hover:bg-white/10"
             >
               <X className="h-4 w-4" />
             </button>
@@ -63,13 +63,13 @@ export function FilterPanel({ filters, onChange, onClose, className }: FilterPan
 
       {/* Sort By */}
       <div>
-        <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+        <h4 className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-3">
           Sort By
         </h4>
         <select
           value={filters.sort}
           onChange={(e) => onChange({ ...filters, sort: e.target.value as FilterState["sort"], page: 1 })}
-          className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-amber-500"
+          className="w-full rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-white dark:bg-white/5 px-3 py-2 text-sm text-neutral-700 dark:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-black/10 dark:focus:ring-white/10"
         >
           <option value="newest">Newest First</option>
           <option value="oldest">Oldest First</option>
@@ -80,7 +80,7 @@ export function FilterPanel({ filters, onChange, onClose, className }: FilterPan
 
       {/* Date Posted */}
       <div>
-        <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+        <h4 className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-3">
           Date Posted
         </h4>
         <div className="flex flex-wrap gap-2">
@@ -91,8 +91,8 @@ export function FilterPanel({ filters, onChange, onClose, className }: FilterPan
               className={cn(
                 "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
                 filters.datePosted === df.value
-                  ? "bg-indigo-600 dark:bg-amber-500 text-white"
-                  : "bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10"
+                  ? "bg-black dark:bg-white text-white dark:text-black"
+                  : "bg-neutral-100 dark:bg-white/5 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-white/10"
               )}
             >
               {df.label}
@@ -103,7 +103,7 @@ export function FilterPanel({ filters, onChange, onClose, className }: FilterPan
 
       {/* Category */}
       <div>
-        <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+        <h4 className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-3">
           Category
         </h4>
         <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto pr-1">
@@ -114,8 +114,8 @@ export function FilterPanel({ filters, onChange, onClose, className }: FilterPan
               className={cn(
                 "px-2.5 py-1 rounded-lg text-xs font-medium transition-colors",
                 filters.categories.includes(cat.id)
-                  ? "bg-indigo-600 dark:bg-amber-500 text-white"
-                  : "bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10"
+                  ? "bg-black dark:bg-white text-white dark:text-black"
+                  : "bg-neutral-100 dark:bg-white/5 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-white/10"
               )}
             >
               {cat.name}
@@ -126,22 +126,22 @@ export function FilterPanel({ filters, onChange, onClose, className }: FilterPan
 
       {/* Source */}
       <div>
-        <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+        <h4 className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-3">
           Source
         </h4>
         <div className="space-y-1">
           {SOURCES.map((source) => (
             <label
               key={source.id}
-              className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition-colors"
+              className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-neutral-50 dark:hover:bg-white/5 cursor-pointer transition-colors"
             >
               <input
                 type="checkbox"
                 checked={filters.sources.includes(source.id)}
                 onChange={() => toggle("sources", source.id)}
-                className="h-3.5 w-3.5 rounded border-gray-300 dark:border-gray-600 text-indigo-600 dark:text-amber-500 focus:ring-indigo-500 dark:focus:ring-amber-500"
+                className="h-3.5 w-3.5 rounded border-neutral-300 dark:border-neutral-600 text-black dark:text-white focus:ring-black/20 dark:focus:ring-white/20"
               />
-              <span className="text-sm text-gray-700 dark:text-gray-300">{source.name}</span>
+              <span className="text-sm text-neutral-700 dark:text-neutral-300">{source.name}</span>
             </label>
           ))}
         </div>

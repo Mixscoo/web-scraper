@@ -40,8 +40,8 @@ export default function MapPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Map View</h1>
-          <p className="mt-2 text-gray-500 dark:text-gray-400">
+          <h1 className="text-3xl font-bold text-black dark:text-white">Map View</h1>
+          <p className="mt-2 text-neutral-500 dark:text-neutral-400">
             Visual overview of job opportunities across the Middle East.
           </p>
         </motion.div>
@@ -55,7 +55,7 @@ export default function MapPage() {
         >
           {!mounted ? (
             <div className="h-full flex items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-indigo-600 dark:text-amber-400" />
+              <Loader2 className="h-8 w-8 animate-spin text-black dark:text-white" />
             </div>
           ) : (
             <MapContainer
@@ -85,7 +85,7 @@ export default function MapPage() {
                       <p className="font-semibold mt-1">{country.name}</p>
                       <a
                         href={`/jobs?country=${encodeURIComponent(country.name)}`}
-                        className="text-indigo-600 dark:text-amber-400 text-sm hover:underline mt-1 block"
+                        className="text-[var(--accent)] text-sm hover:underline mt-1 block"
                       >
                         Browse jobs →
                       </a>

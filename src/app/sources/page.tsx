@@ -13,8 +13,8 @@ export default function SourcesPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-10"
         >
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Data Sources</h1>
-          <p className="mt-2 text-gray-500 dark:text-gray-400">
+          <h1 className="text-3xl font-bold text-black dark:text-white">Data Sources</h1>
+          <p className="mt-2 text-neutral-500 dark:text-neutral-400">
             We aggregate job listings from these trusted Middle East job portals.
           </p>
         </motion.div>
@@ -31,12 +31,12 @@ export default function SourcesPage() {
               {/* Header */}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-amber-400 font-bold text-lg">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-black/[0.04] dark:bg-white/[0.06] text-black dark:text-white font-bold text-lg">
                     {source.name.charAt(0)}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white">{source.name}</h3>
-                    <span className="text-xs text-gray-400 dark:text-gray-500">{source.url.replace("https://www.", "")}</span>
+                    <h3 className="font-semibold text-black dark:text-white">{source.name}</h3>
+                    <span className="text-xs text-neutral-400 dark:text-neutral-500">{source.url.replace("https://www.", "")}</span>
                   </div>
                 </div>
                 {source.active ? (
@@ -53,7 +53,7 @@ export default function SourcesPage() {
               </div>
 
               {/* Description */}
-              <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed flex-1">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed flex-1">
                 {source.description}
               </p>
 
@@ -62,7 +62,7 @@ export default function SourcesPage() {
                 href={source.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-4 flex items-center gap-1.5 text-sm font-medium text-indigo-600 dark:text-amber-400 hover:underline"
+                className="mt-4 flex items-center gap-1.5 text-sm font-medium text-[var(--accent)] hover:underline"
               >
                 Visit website
                 <ExternalLink className="h-3.5 w-3.5" />
@@ -76,12 +76,12 @@ export default function SourcesPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
-          className="card p-6 bg-amber-50/50 dark:bg-amber-500/5 border-amber-200/50 dark:border-amber-500/10"
+          className="card p-6 bg-neutral-50/50 dark:bg-white/[0.02] border-neutral-200/50 dark:border-white/[0.06]"
         >
-          <h3 className="text-sm font-semibold text-amber-800 dark:text-amber-400 mb-2">
+          <h3 className="text-sm font-semibold text-neutral-800 dark:text-neutral-300 mb-2">
             Disclaimer
           </h3>
-          <p className="text-sm text-amber-700/80 dark:text-amber-400/70 leading-relaxed">
+          <p className="text-sm text-neutral-600/80 dark:text-neutral-400/70 leading-relaxed">
             This tool aggregates publicly available job listings from third-party websites for
             informational purposes only. All job data, trademarks, and content belong to their
             respective owners. We do not claim ownership of any scraped data. Users should verify

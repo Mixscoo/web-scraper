@@ -44,13 +44,13 @@ export function FeaturesSection() {
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 dark:text-white">
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-black dark:text-white">
             Everything you need to{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-amber-400 dark:to-orange-500">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent)] to-neutral-500 dark:from-[var(--accent)] dark:to-neutral-400">
               find jobs faster
             </span>
           </h2>
-          <p className="mt-4 text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
+          <p className="mt-4 text-lg text-neutral-500 dark:text-neutral-400 max-w-2xl mx-auto">
             Our scraper aggregates job listings from the top Middle East job portals —
             saving you hours of manual searching.
           </p>
@@ -65,13 +65,13 @@ export function FeaturesSection() {
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.5, delay: i * 0.1 }}
             >
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-amber-400 mb-5 group-hover:scale-110 transition-transform">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-black/[0.04] dark:bg-white/[0.06] text-black dark:text-white mb-5 group-hover:scale-110 transition-transform">
                 <feature.icon className="h-6 w-6" />
               </div>
-              <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">
+              <h3 className="text-base font-semibold text-black dark:text-white mb-2">
                 {feature.title}
               </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">
                 {feature.description}
               </p>
             </motion.div>

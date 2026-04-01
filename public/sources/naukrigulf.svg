@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="NaukriGulf logo">
+  <rect width="120" height="120" rx="24" fill="#0f172a" />
+  <rect x="18" y="18" width="84" height="56" rx="14" fill="#0ea5e9" />
+  <path d="M34 34h10l16 24V34h10v40H60L44 50v24H34V34Z" fill="#e0f2fe" />
+  <path d="M24 90h72v8H24z" fill="#f8fafc" />
+  <text x="60" y="108" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#f8fafc">NAUKRIGULF</text>
+</svg>

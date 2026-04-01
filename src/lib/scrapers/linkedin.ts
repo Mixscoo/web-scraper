@@ -65,7 +65,7 @@ const ARABIC_KEYWORDS = [
 
 export class LinkedInScraper extends BaseScraper {
   constructor() {
-    super("LinkedIn");
+    super("LinkedIn", "linkedin");
   }
 
   protected async performScrape(query: string, country: string): Promise<Job[]> {

@@ -1,13 +1,15 @@
 "use client";
 
-import { Suspense, useState, useCallback } from "react";
+import { Suspense, useState, useCallback, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { SlidersHorizontal, Loader2, SearchX, ArrowLeft, Globe } from "lucide-react";
+import { SlidersHorizontal, Loader2, SearchX, ArrowLeft, Globe, RotateCw } from "lucide-react";
 import { SearchBar } from "@/components/jobs/search-bar";
 import { FilterPanel } from "@/components/jobs/filter-panel";
 import { JobCard } from "@/components/jobs/job-card";
 import { JobDetailModal } from "@/components/jobs/job-detail-modal";
+import { BlockingStatusModal } from "@/components/jobs/blocking-status-modal";
+import { ForceRefreshConfirmModal } from "@/components/jobs/force-refresh-confirm-modal";
 import { ExportButton } from "@/components/jobs/export-button";
 import { useJobs } from "@/hooks/use-jobs";
 import { COUNTRIES } from "@/lib/constants";
@@ -48,6 +50,20 @@ function CountryFlag({ code, size = 40 }: { code: string; size?: number }) {
   );
 }
 
+function formatShortTimestamp(value: string | null): string | null {
+  if (!value) return null;
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+}
+
 function JobsContent() {
   const searchParams = useSearchParams();
   const initialCountry = searchParams.get("country");
@@ -65,13 +81,46 @@ function JobsContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [showForceRefreshConfirm, setShowForceRefreshConfirm] = useState(false);
+  const [forceRefreshNonce, setForceRefreshNonce] = useState(0);
+  const [isForceRefreshing, setIsForceRefreshing] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const hasCountry = filters.countries.length > 0;
-  const { data, isLoading, isFetching } = useJobs(filters);
+  const { data, isLoading, isFetching } = useJobs(filters, {
+    refreshNonce: forceRefreshNonce,
+    forceRefresh: isForceRefreshing,
+  });
+
+  useEffect(() => {
+    if (isForceRefreshing && !isFetching) {
+      setIsForceRefreshing(false);
+    }
+  }, [isForceRefreshing, isFetching]);
 
   const handleSearch = useCallback(() => {
     setFilters((f) => ({ ...f, query: searchQuery.trim(), page: 1 }));
   }, [searchQuery]);
+
+  const handleForceRefresh = useCallback(() => {
+    setIsForceRefreshing(true);
+    setForceRefreshNonce((value) => value + 1);
+  }, []);
+
+  const openForceRefreshConfirm = useCallback(() => {
+    setShowForceRefreshConfirm(true);
+  }, []);
+
+  const closeForceRefreshConfirm = useCallback(() => {
+    if (!isForceRefreshing) {
+      setShowForceRefreshConfirm(false);
+    }
+  }, [isForceRefreshing]);
+
+  const confirmForceRefresh = useCallback(() => {
+    setShowForceRefreshConfirm(false);
+    handleForceRefresh();
+  }, [handleForceRefresh]);
 
   const selectCountry = useCallback((name: string) => {
     setFilters((f) => ({ ...f, countries: [name], page: 1 }));
@@ -83,6 +132,26 @@ function JobsContent() {
   }, []);
 
   const displayJobs = data?.jobs ?? [];
+  const liveScrapeTime = formatShortTimestamp(data?.liveScrapedAt ?? null);
+  const blockingState = isExporting
+    ? {
+        title: "Preparing your export",
+        description: "Your file is being compiled and packaged for download.",
+        hint: "The page is temporarily locked so accidental clicks do not interrupt the export.",
+      }
+    : isLoading
+      ? {
+          title: "Loading jobs",
+          description: "The scraper is collecting listings from multiple sources for this page.",
+          hint: "Please wait until loading finishes before using the page again.",
+        }
+    : isForceRefreshing && isFetching
+      ? {
+          title: "Refreshing live jobs",
+          description: "The scraper is contacting the sources again for fresh results right now.",
+          hint: "Please wait until the live refresh finishes before using the page again.",
+        }
+      : null;
 
   // ---------- Country Browse Landing ----------
   if (!hasCountry) {
@@ -171,7 +240,7 @@ function JobsContent() {
           {/* Filter Sidebar — Desktop */}
           <div className="hidden md:block w-64 shrink-0">
             <div className="sticky top-24">
-              <FilterPanel filters={filters} onChange={setFilters} />
+              <FilterPanel filters={filters} onChange={setFilters} availableCategories={data?.availableCategories} />
             </div>
           </div>
 
@@ -191,15 +260,51 @@ function JobsContent() {
                         {data?.sources && data.sources.length > 0 && (
                           <> from <span className="font-medium">{data.sources.length}</span> sources</>
                         )}
-                        {data?.cachedAt && (
-                      <span className="text-xs text-neutral-400 ml-2">(cached)</span>
-                        )}
                       </>
                     )}
                   </p>
+                  {!isLoading && data?.liveScrapedAt && (
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-400 dark:text-neutral-500">
+                      <span
+                        className={cn(
+                          "inline-flex items-center rounded-full px-2 py-0.5 font-medium",
+                          data.cachedAt
+                            ? "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"
+                            : "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
+                        )}
+                      >
+                        {data.cachedAt ? "Cached results" : "Fresh results"}
+                      </span>
+                      <span>
+                        {data.cachedAt
+                          ? `Showing cached results from ${liveScrapeTime ?? "the last live scrape"}.`
+                          : `Last live scrape: ${liveScrapeTime ?? "just now"}.`}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <ExportButton query={filters.query} country={filters.countries[0] || "Jordan"} />
+                  <button
+                    onClick={openForceRefreshConfirm}
+                    disabled={isLoading || isFetching}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-neutral-100 dark:bg-white/10 hover:bg-neutral-200 dark:hover:bg-white/15 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium text-neutral-700 dark:text-neutral-300 transition-colors"
+                  >
+                    {isForceRefreshing && isFetching ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <RotateCw className="h-4 w-4" />
+                    )}
+                    Refresh now
+                  </button>
+                  <ExportButton
+                    query={filters.query}
+                    country={filters.countries[0] || "Jordan"}
+                    categories={filters.categories}
+                    sources={filters.sources}
+                    datePosted={filters.datePosted}
+                    sort={filters.sort}
+                    onExportStateChange={setIsExporting}
+                  />
                   <button
                     onClick={() => setShowFilters(true)}
                     className="md:hidden flex items-center gap-2 px-4 py-2 rounded-xl bg-neutral-100 dark:bg-white/10 hover:bg-neutral-200 dark:hover:bg-white/15 text-sm font-medium text-neutral-700 dark:text-neutral-300 transition-colors"
@@ -320,13 +425,25 @@ function JobsContent() {
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="absolute inset-x-0 bottom-0 max-h-[80vh] overflow-y-auto bg-white dark:bg-neutral-900 rounded-t-3xl p-6"
           >
-            <FilterPanel filters={filters} onChange={setFilters} onClose={() => setShowFilters(false)} />
+            <FilterPanel filters={filters} onChange={setFilters} availableCategories={data?.availableCategories} onClose={() => setShowFilters(false)} />
           </motion.div>
         </div>
       )}
 
       {/* Job Detail Modal */}
       <JobDetailModal job={selectedJob} onClose={() => setSelectedJob(null)} />
+      <ForceRefreshConfirmModal
+        open={showForceRefreshConfirm}
+        loading={isForceRefreshing && isFetching}
+        onClose={closeForceRefreshConfirm}
+        onConfirm={confirmForceRefresh}
+      />
+      <BlockingStatusModal
+        open={Boolean(blockingState)}
+        title={blockingState?.title ?? ""}
+        description={blockingState?.description ?? ""}
+        hint={blockingState?.hint ?? ""}
+      />
     </div>
   );
 }

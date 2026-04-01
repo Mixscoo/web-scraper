@@ -8,11 +8,12 @@ import { cn } from "@/lib/utils";
 interface FilterPanelProps {
   filters: FilterState;
   onChange: (filters: FilterState) => void;
+  availableCategories?: { id: string; name: string }[];
   onClose?: () => void;
   className?: string;
 }
 
-export function FilterPanel({ filters, onChange, onClose, className }: FilterPanelProps) {
+export function FilterPanel({ filters, onChange, availableCategories, onClose, className }: FilterPanelProps) {
   const toggle = (key: "countries" | "categories" | "sources", value: string) => {
     const arr = filters[key];
     const updated = arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value];
@@ -106,21 +107,39 @@ export function FilterPanel({ filters, onChange, onClose, className }: FilterPan
         <h4 className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-3">
           Category
         </h4>
-        <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto pr-1">
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => toggle("categories", cat.id)}
-              className={cn(
-                "px-2.5 py-1 rounded-lg text-xs font-medium transition-colors",
-                filters.categories.includes(cat.id)
-                  ? "bg-black dark:bg-white text-white dark:text-black"
-                  : "bg-neutral-100 dark:bg-white/5 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-white/10"
-              )}
-            >
-              {cat.name}
-            </button>
-          ))}
+        <div className="flex flex-wrap gap-1.5 max-h-[300px] overflow-y-auto pr-1">  
+          {(!availableCategories || availableCategories.length === 0) ? (
+            CATEGORIES.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => toggle("categories", cat.id)}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg text-xs font-medium transition-colors", 
+                  filters.categories.includes(cat.id)
+                    ? "bg-black dark:bg-white text-white dark:text-black"
+                    : "bg-neutral-100 dark:bg-white/5 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-white/10"
+                )}
+              >
+                {cat.name}
+              </button>
+            ))
+          ) : (
+            availableCategories.map((cat) => (
+              <button
+                key={cat.id}
+                title={cat.id}
+                onClick={() => toggle("categories", cat.id)}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg text-xs font-medium transition-colors", 
+                  filters.categories.includes(cat.id)
+                    ? "bg-black dark:bg-white text-white dark:text-black"
+                    : "bg-neutral-100 dark:bg-white/5 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-white/10"
+                )}
+              >
+                {cat.name}
+              </button>
+            ))
+          )}
         </div>
       </div>
 

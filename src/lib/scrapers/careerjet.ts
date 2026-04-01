@@ -50,7 +50,7 @@ const SECONDARY_KEYWORDS = [
 
 export class GrabJobsScraper extends BaseScraper {
   constructor() {
-    super("GrabJobs");
+    super("GrabJobs", "grabjobs");
   }
 
   protected async performScrape(query: string, country: string): Promise<Job[]> {

@@ -48,3 +48,16 @@ next-env.d.ts
 fix_*.js
 os_*.ts
 stats_output.json
+
+# debug/bypass/test scripts
+bypass_*.js
+parse_test*.js
+test_*.js
+test-ai.js
+dump.js
+diagnose_scrapers.js
+gulf.html
+naukri.html
+
+# runtime data (source health records)
+/data/

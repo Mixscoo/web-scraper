@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Learn4Good logo">
+  <rect width="120" height="120" rx="24" fill="#0f172a" />
+  <rect x="20" y="24" width="80" height="56" rx="10" fill="#22c55e" />
+  <path d="M34 38h12v28H34zM52 38h12v28H52zM70 38h16v8H78v20h-8z" fill="#052e16" />
+  <path d="M28 90h64v8H28z" fill="#e2e8f0" />
+  <text x="60" y="108" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#e2e8f0">LEARN4GOOD</text>
+</svg>

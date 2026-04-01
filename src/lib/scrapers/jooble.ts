@@ -43,7 +43,7 @@ interface JoobleJob {
 
 export class JoobleScraper extends BaseScraper {
   constructor() {
-    super("Jooble");
+    super("Jooble", "jooble");
   }
 
   protected async performScrape(query: string, country: string): Promise<Job[]> {

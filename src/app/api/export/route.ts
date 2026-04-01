@@ -4,13 +4,88 @@ import * as Papa from "papaparse";
 import * as XLSX from "xlsx";
 import { scrapeAll } from "@/lib/scrapers";
 import { cache } from "@/lib/cache";
+import { resolveSourceId } from "@/lib/source-registry";
+import type { Job } from "@/lib/types";
+
+export const runtime = "nodejs";
 
 const exportSchema = z.object({
   format: z.enum(["csv", "xlsx", "providers"]),
-  q: z.string().min(1).max(200),
+  q: z.string().max(200).default(""),
   country: z.string().default("Jordan"),
-  category: z.string().optional(),
+  categories: z.string().optional(),
+  sources: z.string().optional(),
+  sort: z.enum(["newest", "oldest", "company-az", "company-za"]).default("newest"),
+  datePosted: z.enum(["all", "24h", "week", "month"]).default("all"),
 });
+
+function applyFilters(
+  jobs: Job[],
+  opts: {
+    categories?: string;
+    sources?: string;
+    datePosted: string;
+    sort: string;
+  }
+): Job[] {
+  let filtered = jobs.filter((job) => job.category !== "other");
+
+  if (opts.datePosted !== "all") {
+    const now = Date.now();
+    const cutoffs: Record<string, number> = {
+      "24h": 24 * 60 * 60 * 1000,
+      week: 7 * 24 * 60 * 60 * 1000,
+      month: 30 * 24 * 60 * 60 * 1000,
+    };
+    const cutoff = cutoffs[opts.datePosted];
+    if (cutoff) {
+      filtered = filtered.filter((job) => now - new Date(job.postedDate).getTime() <= cutoff);
+    }
+  }
+
+  if (opts.categories) {
+    const categories = new Set(opts.categories.split(",").map((value) => value.trim()).filter(Boolean));
+    if (categories.size > 0) {
+      filtered = filtered.filter((job) => categories.has(job.category));
+    }
+  }
+
+  if (opts.sources) {
+    const sourceIds = new Set(opts.sources.split(",").map((value) => value.trim().toLowerCase()).filter(Boolean));
+    if (sourceIds.size > 0) {
+      filtered = filtered.filter((job) => {
+        const sourceId = resolveSourceId(job.sourceName);
+        return sourceId ? sourceIds.has(sourceId) : false;
+      });
+    }
+  }
+
+  filtered.sort((a, b) => {
+    switch (opts.sort) {
+      case "oldest":
+        return new Date(a.postedDate).getTime() - new Date(b.postedDate).getTime();
+      case "company-az":
+        return a.company.localeCompare(b.company);
+      case "company-za":
+        return b.company.localeCompare(a.company);
+      case "newest":
+      default:
+        return new Date(b.postedDate).getTime() - new Date(a.postedDate).getTime();
+    }
+  });
+
+  return filtered;
+}
+
+function toFileToken(value: string, fallback: string): string {
+  const normalized = value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  return normalized || fallback;
+}
 
 export async function GET(request: NextRequest) {
   const params = Object.fromEntries(request.nextUrl.searchParams);
@@ -20,20 +95,22 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Invalid parameters" }, { status: 400 });
   }
 
-  const { format, q, country, category } = parsed.data;
-  const cacheKey = cache.generateKey("scrape", q, country, "all");
+  const { format, q, country, categories, sources, sort, datePosted } = parsed.data;
+  const cacheKey = cache.generateKey("scrape", q, country, datePosted);
 
-  let jobs;
-  const cached = cache.get<{ jobs: import("@/lib/types").Job[] }>(cacheKey);
+  let jobs: Job[];
+  const cached = cache.get<{ jobs: Job[]; sources: string[] }>(cacheKey);
   if (cached) {
     jobs = cached.data.jobs;
   } else {
     const result = await scrapeAll(q, country);
     jobs = result.jobs;
-    if (category) {
-      jobs = jobs.filter((j) => j.category === category);
-    }
   }
+
+  jobs = applyFilters(jobs, { categories, sources, datePosted, sort });
+
+  const countryToken = toFileToken(country, "jobs");
+  const queryToken = toFileToken(q, "all-jobs");
 
   const exportData = jobs.map((job) => ({
     Title: job.title,
@@ -80,7 +157,7 @@ export async function GET(request: NextRequest) {
     return new NextResponse(csv, {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": `attachment; filename="providers-${country}-${q}.csv"`,
+        "Content-Disposition": `attachment; filename="providers-${countryToken}-${queryToken}.csv"`,
       },
     });
   }
@@ -90,7 +167,7 @@ export async function GET(request: NextRequest) {
     return new NextResponse(csv, {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": `attachment; filename="jobs-${country}-${q}.csv"`,
+        "Content-Disposition": `attachment; filename="jobs-${countryToken}-${queryToken}.csv"`,
       },
     });
   }
@@ -104,7 +181,7 @@ export async function GET(request: NextRequest) {
   return new NextResponse(buffer, {
     headers: {
       "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition": `attachment; filename="jobs-${country}-${q}.xlsx"`,
+      "Content-Disposition": `attachment; filename="jobs-${countryToken}-${queryToken}.xlsx"`,
     },
   });
 }

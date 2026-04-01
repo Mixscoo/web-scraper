@@ -36,7 +36,7 @@ const HOUSEHOLD_KEYWORDS = [
 
 export class TalentScraper extends BaseScraper {
   constructor() {
-    super("Talent.com");
+    super("Talent.com", "talent");
   }
 
   protected async performScrape(query: string, country: string): Promise<Job[]> {

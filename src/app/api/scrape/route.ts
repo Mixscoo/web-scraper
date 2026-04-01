@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod/v4";
 import { scrapeAll } from "@/lib/scrapers";
 import { cache } from "@/lib/cache";
-import { ITEMS_PER_PAGE, CATEGORY_IDS, SOURCES } from "@/lib/constants";
+import { ITEMS_PER_PAGE, CATEGORIES, CATEGORY_IDS, SOURCES } from "@/lib/constants";
+import { getSourceById, resolveSourceId } from "@/lib/source-registry";
+import { sourceHealth } from "@/lib/source-health";
 import type { ApiResponse, Job } from "@/lib/types";
+
+export const runtime = "nodejs";
 
 const searchSchema = z.object({
   q: z.string().max(200).default(""),
@@ -55,12 +59,11 @@ function applyFilters(
   // Source filter — UI sends source IDs, we need to match against sourceName
   if (opts.sources) {
     const sourceIds = new Set(opts.sources.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean));
-    // Map source IDs to source names
-    const sourceNames = new Set(
-      SOURCES.filter((s) => sourceIds.has(s.id)).map((s) => s.name.toLowerCase())
-    );
-    if (sourceNames.size > 0) {
-      filtered = filtered.filter((j) => sourceNames.has(j.sourceName.toLowerCase()));
+    if (sourceIds.size > 0) {
+      filtered = filtered.filter((j) => {
+        const sourceId = resolveSourceId(j.sourceName);
+        return sourceId ? sourceIds.has(sourceId) : false;
+      });
     }
   }
 
@@ -82,14 +85,39 @@ function applyFilters(
   return filtered;
 }
 
+function getActiveSourceNames(jobs: Job[]): string[] {
+  return Array.from(
+    new Set(
+      jobs.map((job) => {
+        const sourceId = resolveSourceId(job.sourceName);
+        return getSourceById(sourceId)?.name ?? job.sourceName;
+      })
+    )
+  );
+}
+
+function formatCategoryName(slug: string): string {
+  if (!slug || slug === "other") return "Other";
+  return slug
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
 export async function GET(request: NextRequest) {
   const params = Object.fromEntries(request.nextUrl.searchParams);
+  const forceFresh = request.nextUrl.searchParams.get("force") === "1";
+  const responseInit = {
+    headers: {
+      "Cache-Control": "no-store",
+    },
+  };
 
   const parsed = searchSchema.safeParse(params);
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Invalid parameters", details: parsed.error.issues },
-      { status: 400 }
+      { status: 400, ...responseInit }
     );
   }
 
@@ -99,32 +127,52 @@ export async function GET(request: NextRequest) {
   const cacheKey = cache.generateKey("scrape", q, country, datePosted);
 
   // Check cache for raw scraped data
-  const cached = cache.get<{ jobs: Job[]; sources: string[] }>(cacheKey);
+  const cached = forceFresh ? null : cache.get<{ jobs: Job[]; sources: string[] }>(cacheKey);
   if (cached) {
-    const filtered = applyFilters(cached.data.jobs, { datePosted, categories, sources, sort });
-    const activeSources = [...new Set(filtered.map((j) => j.sourceName))];
+    const rawJobs = cached.data.jobs;
+    const sourceHealthSummary = await sourceHealth.getCountrySummary(country);
+    // Extract dynamically available categories from ALL raw jobs, skipping "other"
+    const uniqueRawCategories = [...new Set(rawJobs.map(j => j.category).filter(c => c !== "other"))];
+    const availableCategories = uniqueRawCategories.map(c => ({
+      id: c,
+      name: CATEGORY_IDS.includes(c as any) ? (CATEGORIES.find(cat => cat.id === c)?.name || formatCategoryName(c)) : formatCategoryName(c)
+    }));
+
+    const filtered = applyFilters(rawJobs, { datePosted, categories, sources, sort });
+    const activeSources = getActiveSourceNames(filtered);
     const start = (page - 1) * ITEMS_PER_PAGE;
     const paginatedJobs = filtered.slice(start, start + ITEMS_PER_PAGE);
     return NextResponse.json({
       jobs: paginatedJobs,
       total: filtered.length,
+      availableCategories,
+      sourceHealth: sourceHealthSummary,
       sources: activeSources,
       cachedAt: cached.cachedAt,
+      liveScrapedAt: cached.cachedAt,
       page,
       totalPages: Math.ceil(filtered.length / ITEMS_PER_PAGE),
-    } satisfies ApiResponse);
+    } satisfies ApiResponse, responseInit);
   }
 
   try {
     const { jobs, results } = await scrapeAll(q, country);
-    const scraperSources = results.filter((r) => r.success).map((r) => r.source);
+    const sourceHealthSummary = await sourceHealth.getCountrySummary(country);
+    const scraperSources = results.filter((r) => r.success).map((r) => r.sourceName);
+    const liveScrapedAt = new Date().toISOString();
 
     // Cache the raw unfiltered results so filters can be applied cheaply
     cache.set(cacheKey, { jobs, sources: scraperSources });
 
+    const uniqueRawCategories = [...new Set(jobs.map(j => j.category).filter(c => c !== "other"))];
+    const availableCategories = uniqueRawCategories.map(c => ({
+      id: c,
+      name: CATEGORY_IDS.includes(c as any) ? (CATEGORIES.find(cat => cat.id === c)?.name || formatCategoryName(c)) : formatCategoryName(c)
+    }));
+
     // Apply all filters + sort
     const filtered = applyFilters(jobs, { datePosted, categories, sources, sort });
-    const activeSources = [...new Set(filtered.map((j) => j.sourceName))];
+  const activeSources = getActiveSourceNames(filtered);
 
     // Paginate
     const start = (page - 1) * ITEMS_PER_PAGE;
@@ -133,16 +181,19 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       jobs: paginatedJobs,
       total: filtered.length,
+      availableCategories,
+      sourceHealth: sourceHealthSummary,
       sources: activeSources,
       cachedAt: null,
+      liveScrapedAt,
       page,
       totalPages: Math.ceil(filtered.length / ITEMS_PER_PAGE),
-    } satisfies ApiResponse);
+    } satisfies ApiResponse, responseInit);
   } catch (error) {
     console.error("[API /scrape] Error:", error);
     return NextResponse.json(
       { error: "Failed to scrape jobs. Please try again." },
-      { status: 500 }
+      { status: 500, ...responseInit }
     );
   }
 }

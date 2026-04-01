@@ -2,82 +2,140 @@ import { BaseScraper } from "./base-scraper";
 import type { Job } from "../types";
 import { normalizeCategory, extractSalary, isMiddleEastJob } from "../utils";
 
-const OPENSOOQ_KEYWORDS = [
-  "تنظيف",       // cleaning
-  "خادمة",       // maid
-  "عاملة",       // worker (female)
-  "شغالة",       // maid
-  "سباك",       // plumber
-  "نجار",       // carpenter
-  "كهربائي",    // electrician
-  "دهان",       // painter
-  "طباخ",       // cook
-  "مربية",      // babysitter
-  "صيانة",      // maintenance
-  "تكييف",      // HVAC
-  "نقل اثاث"    // moving furniture
-];
+interface CountryConfig {
+  country: string;
+  baseUrl: string;
+  defaultCity: string;
+  keywords: string[];
+  cityMatchers: Array<{ city: string; aliases: string[] }>;
+}
+
+const COUNTRY_CONFIG: Record<string, CountryConfig> = {
+  jordan: {
+    country: "Jordan",
+    baseUrl: "https://jo.opensooq.com",
+    defaultCity: "Amman",
+    keywords: [
+      "تنظيف",
+      "خادمة",
+      "عاملة",
+      "شغالة",
+      "سباك",
+      "نجار",
+      "كهربائي",
+      "دهان",
+      "طباخ",
+      "مربية",
+      "صيانة",
+      "تكييف",
+      "نقل اثاث",
+    ],
+    cityMatchers: [
+      { city: "Amman", aliases: ["amman", "عمان"] },
+      { city: "Zarqa", aliases: ["zarqa", "الزرقاء"] },
+      { city: "Irbid", aliases: ["irbid", "إربد", "اربد"] },
+      { city: "Aqaba", aliases: ["aqaba", "العقبة"] },
+    ],
+  },
+  "saudi arabia": {
+    country: "Saudi Arabia",
+    baseUrl: "https://sa.opensooq.com",
+    defaultCity: "Riyadh",
+    keywords: [
+      "سائق",
+      "توصيل",
+      "تنظيف",
+      "خادمة",
+      "عاملة منزلية",
+      "سباك",
+      "نجار",
+      "كهربائي",
+      "دهان",
+      "طباخ",
+      "مربية",
+      "صيانة",
+      "تكييف",
+      "نقل اثاث",
+    ],
+    cityMatchers: [
+      { city: "Riyadh", aliases: ["riyadh", "الرياض"] },
+      { city: "Jeddah", aliases: ["jeddah", "جدة", "جده"] },
+      { city: "Dammam", aliases: ["dammam", "الدمام"] },
+      { city: "Mecca", aliases: ["mecca", "makkah", "مكة"] },
+      { city: "Medina", aliases: ["medina", "madinah", "المدينة"] },
+      { city: "Khobar", aliases: ["khobar", "al khobar", "الخبر"] },
+      { city: "Tabuk", aliases: ["tabuk", "تبوك"] },
+      { city: "Jubail", aliases: ["jubail", "الجبيل"] },
+      { city: "Yanbu", aliases: ["yanbu", "ينبع"] },
+      { city: "Abha", aliases: ["abha", "أبها"] },
+      { city: "Hail", aliases: ["hail", "حائل"] },
+      { city: "Jizan", aliases: ["jizan", "jazan", "جيزان", "جازان"] },
+      { city: "Buraidah", aliases: ["buraidah", "buraydah", "بريدة"] },
+    ],
+  },
+};
+
+function isBroadQuery(query: string): boolean {
+  const normalized = query.trim().toLowerCase();
+  return normalized.length === 0 || normalized === "household services" || normalized === "household service";
+}
+
+function detectCity(config: CountryConfig, text: string): string {
+  const normalized = text.toLowerCase();
+
+  for (const matcher of config.cityMatchers) {
+    if (matcher.aliases.some((alias) => normalized.includes(alias.toLowerCase()))) {
+      return matcher.city;
+    }
+  }
+
+  return config.defaultCity;
+}
 
 export class OpensooqScraper extends BaseScraper {
   constructor() {
-    super("OpenSooq"); // Matches the "name" property
+    super("OpenSooq", "opensooq");
   }
 
   protected async performScrape(query: string, country: string): Promise<Job[]> {
-    if (country.toLowerCase() !== "jordan") {
-      // Right now focusing strictly on Jordan target market per business requirements
-      return [];
-    }
+    const config = COUNTRY_CONFIG[country.toLowerCase()];
+    if (!config) return [];
 
     const jobs: Job[] = [];
     const seenIds = new Set<string>();
+    const searchTerms = isBroadQuery(query) ? config.keywords : [query.trim()];
 
-    // We fetch a few keywords in parallel to stay fast and grab diverse fields
-    const promises = OPENSOOQ_KEYWORDS.map(async (kw) => {
-      const url = `https://jo.opensooq.com/en/find?term=${encodeURIComponent(kw)}`;
+    const promises = searchTerms.map(async (term) => {
+      const url = `${config.baseUrl}/en/find?term=${encodeURIComponent(term)}`;
       try {
         const $ = await this.fetchPage(url);
         
         $('a').each((i, el) => {
           const href = $(el).attr('href');
           if (href && (href.includes('/job-posters/') || href.includes('/search/'))) {
-            // Find the listing title inside the anchor
             const title = $(el).find('h2').first().text().trim();
             
             if (title && title.length > 3) {
               const fullText = $(el).text().trim().replace(/\s+/g, ' ');
               
-              // Id extraction from href
               const id = href.split('/').pop() || href;
 
               if (seenIds.has(id)) return;
               seenIds.add(id);
 
-              const absoluteUrl = href.startsWith('http') ? href : `https://jo.opensooq.com${href}`;
-
-              // Determine city from text
-              let city = "Amman"; // Default based on majority volume
-              const lowercaseText = fullText.toLowerCase();
-              if (lowercaseText.includes("zarqa") || fullText.includes("الزرقاء")) city = "Zarqa";
-              else if (lowercaseText.includes("irbid") || fullText.includes("إربد")) city = "Irbid";
-              else if (lowercaseText.includes("aqaba") || fullText.includes("العقبة")) city = "Aqaba";
-
-              // Category mapping
+              const absoluteUrl = href.startsWith('http') ? href : `${config.baseUrl}${href}`;
+              const city = detectCity(config, fullText);
               const category = normalizeCategory(title);
-
-              // Company mapping (often just individual names or "Independent Provider")
               const company = "Independent Provider";
-
-              // Exact price extraction (avoids Cheerio string concatenation issues)
               const rawPrice = $(el).find('.priceColor').text().trim() || $(el).find('[class*="price"]').text().trim();
-              let salary = extractSalary(title) || extractSalary(rawPrice) || extractSalary(fullText);
+              const salary = extractSalary(title) || extractSalary(rawPrice) || extractSalary(fullText);
 
               jobs.push({
                 id: `os-${id}`,
                 title: title,
                 company: company,
-                location: `${city}, Jordan`,
-                country: "Jordan",
+                location: `${city}, ${config.country}`,
+                country: config.country,
                 city: city,
                 category: category,
                 description: fullText.substring(0, 500),
@@ -93,13 +151,12 @@ export class OpensooqScraper extends BaseScraper {
           }
         });
       } catch (err) {
-        console.error(`[OpenSooq] Error fetching keyword ${kw}:`, err instanceof Error ? err.message : err);
+        console.error(`[OpenSooq] Error fetching keyword ${term}:`, err instanceof Error ? err.message : err);
       }
     });
 
     await Promise.all(promises);
 
-    // Keep only valid Middle East jobs that have a mapped category
     const validJobs = jobs.filter(j => isMiddleEastJob(j) && j.category !== "other");
     return validJobs;
   }

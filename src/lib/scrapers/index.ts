@@ -2,24 +2,25 @@ import type { Job, ScraperResult } from "../types";
 import { isMiddleEastJob } from "../utils";
 import { jobStore } from "../job-store";
 import { categorizeOtherJobs } from "../ai-categorizer";
+import { sourceHealth } from "../source-health";
 import { LinkedInScraper } from "./linkedin";
 import { TalentScraper } from "./talent";
-import { JSearchScraper } from "./jsearch";
-import { AdzunaScraper } from "./adzuna";
 import { JoobleScraper } from "./jooble";
 import { GrabJobsScraper } from "./careerjet";
-import { BaytScraper } from "./remoteok";
 import { OpensooqScraper } from "./opensooq";
+import { GulfTalentScraper } from "./gulftalent";
+import { JobrapidoScraper } from "./jobrapido";
+import { Learn4GoodScraper } from "./learn4good";
 import type { BaseScraper } from "./base-scraper";
 
 const scrapers: BaseScraper[] = [
   new LinkedInScraper(),
   new TalentScraper(),
-  new JSearchScraper(),
-  new AdzunaScraper(),
   new JoobleScraper(),
   new GrabJobsScraper(),
-  new BaytScraper(),
+  new GulfTalentScraper(),
+  new JobrapidoScraper(),
+  new Learn4GoodScraper(),
   new OpensooqScraper(),
 ];
 
@@ -29,35 +30,88 @@ export async function scrapeAll(
 ): Promise<{ jobs: Job[]; results: ScraperResult[] }> {
   const startTime = Date.now();
 
+  const runnableScrapers: Array<{
+    scraper: BaseScraper;
+    sourceId: string;
+    sourceName: string;
+  }> = [];
+  const skippedResults: ScraperResult[] = [];
+
+  for (const scraper of scrapers) {
+    const sourceId = scraper.getSourceId();
+    const sourceName = scraper.getSourceName();
+    const gate = await sourceHealth.shouldRun(sourceId, country);
+
+    if (!gate.allowed) {
+      skippedResults.push({
+        jobs: [],
+        sourceId,
+        sourceName,
+        success: false,
+        skipped: true,
+        skipReason: gate.reason ?? "Auto-paused",
+        scrapedAt: new Date().toISOString(),
+      });
+      console.log(`[${sourceName}] Skipped for ${country}: ${gate.reason}`);
+      continue;
+    }
+
+    runnableScrapers.push({ scraper, sourceId, sourceName });
+  }
+
   const settled = await Promise.allSettled(
-    scrapers.map(async (scraper) => {
-      const scraperName = scraper.constructor.name.replace("Scraper", "");
+    runnableScrapers.map(async ({ scraper, sourceId, sourceName }) => {
       try {
         const jobs = await scraper.scrape(query, country);
-        console.log(`[${scraperName}] Returned ${jobs.length} jobs`);
+        await sourceHealth.recordRun({
+          sourceId,
+          country,
+          success: true,
+          jobsCount: jobs.length,
+        });
+        console.log(`[${sourceName}] Returned ${jobs.length} jobs`);
         return {
           jobs,
-          source: scraperName,
+          sourceId,
+          sourceName,
           success: true,
           scrapedAt: new Date().toISOString(),
         } as ScraperResult;
       } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        await sourceHealth.recordRun({
+          sourceId,
+          country,
+          success: false,
+          jobsCount: 0,
+          error: message,
+        });
         return {
           jobs: [],
-          source: scraperName,
+          sourceId,
+          sourceName,
           success: false,
-          error: error instanceof Error ? error.message : "Unknown error",
+          error: message,
           scrapedAt: new Date().toISOString(),
         } as ScraperResult;
       }
     })
   );
 
-  const results: ScraperResult[] = settled.map((s) =>
-    s.status === "fulfilled"
-      ? s.value
-      : { jobs: [], source: "Unknown", success: false, error: "Promise rejected", scrapedAt: new Date().toISOString() }
+  const resultsFromRuns: ScraperResult[] = settled.map((result, index) =>
+    result.status === "fulfilled"
+      ? result.value
+      : {
+          jobs: [],
+          sourceId: runnableScrapers[index]?.sourceId ?? "unknown",
+          sourceName: runnableScrapers[index]?.sourceName ?? "Unknown",
+          success: false,
+          error: result.reason instanceof Error ? result.reason.message : "Promise rejected",
+          scrapedAt: new Date().toISOString(),
+        }
   );
+
+  const results: ScraperResult[] = [...resultsFromRuns, ...skippedResults];
 
   const allJobs = results.flatMap((r) => r.jobs);
   let deduped = deduplicateJobs(allJobs);
@@ -68,22 +122,30 @@ export async function scrapeAll(
     .filter((idx) => idx !== -1);
 
   if (otherJobsIndices.length > 0) {
-    console.log(`[AI] Attempting to categorize ${otherJobsIndices.length} "other" jobs...`);
     const titlesToCategorize = otherJobsIndices.map(idx => deduped[idx].title);
     
-    // Batch process to avoid huge payload. (e.g. 50 titles at a time)
+    // Deduplicate titles to lower AI overhead and prevent length mismatches
+    const uniqueTitles = [...new Set(titlesToCategorize)];
+    console.log(`[AI] Attempting to categorize ${uniqueTitles.length} unique job titles out of ${titlesToCategorize.length} "other" jobs...`);
+
+    // Batch process to avoid huge payload.
     const BATCH_SIZE = 50;
-    for (let i = 0; i < titlesToCategorize.length; i += BATCH_SIZE) {
-      const batchTitles = titlesToCategorize.slice(i, i + BATCH_SIZE);
-      const batchIndices = otherJobsIndices.slice(i, i + BATCH_SIZE);
-      
+    const titleToCategoryMap = new Map<string, string>();
+
+    for (let i = 0; i < uniqueTitles.length; i += BATCH_SIZE) {
+      const batchTitles = uniqueTitles.slice(i, i + BATCH_SIZE);
       const chunkCategories = await categorizeOtherJobs(batchTitles);
-      
-      chunkCategories.forEach((cat, offset) => {
-        const originalIdx = batchIndices[offset];
-        deduped[originalIdx].category = cat;
+
+      batchTitles.forEach((title, idx) => {
+        titleToCategoryMap.set(title, chunkCategories[idx] || "other");
       });
     }
+
+    // Map the results back to the deduplicated jobs using the title map
+    otherJobsIndices.forEach(idx => {
+      const jobTitle = deduped[idx].title;
+      deduped[idx].category = titleToCategoryMap.get(jobTitle) || "other";
+    });
   }
 
   // Filter out non-Middle-East jobs

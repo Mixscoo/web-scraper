@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Jobrapido logo">
+  <rect width="120" height="120" rx="24" fill="#101828" />
+  <circle cx="36" cy="36" r="18" fill="#ef4444" />
+  <path d="M60 26h30v8H68v18h18v8H68v34H60V26Z" fill="#f8fafc" />
+  <path d="M30 62h24v8H38v24h-8V62Z" fill="#f8fafc" />
+  <text x="60" y="108" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#f8fafc">JOBRAPIDO</text>
+</svg>

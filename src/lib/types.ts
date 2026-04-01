@@ -18,10 +18,38 @@ export interface Job {
 
 export interface ScraperResult {
   jobs: Job[];
-  source: string;
+  sourceId: string;
+  sourceName: string;
   success: boolean;
+  skipped?: boolean;
+  skipReason?: string;
   error?: string;
   scrapedAt: string;
+}
+
+export type SourceHealthState = "healthy" | "warning" | "paused" | "unknown";
+
+export interface SourceHealthSummary {
+  sourceId: string;
+  sourceName: string;
+  sourceUrl: string;
+  catalogActive: boolean;
+  country: string;
+  state: SourceHealthState;
+  reason: string | null;
+  lastRunAt: string | null;
+  lastSuccessAt: string | null;
+  lastResultCount: number;
+  consecutiveZeroResults: number;
+  consecutiveFailures: number;
+  disabledUntil: string | null;
+  totalRuns: number;
+  totalJobsCollected: number;
+}
+
+export interface SourceHealthResponse {
+  country: string;
+  sources: SourceHealthSummary[];
 }
 
 export interface FilterState {
@@ -65,7 +93,10 @@ export interface ApiResponse {
   jobs: Job[];
   total: number;
   sources: string[];
+  availableCategories?: { id: string; name: string }[];
+  sourceHealth?: SourceHealthSummary[];
   cachedAt: string | null;
+  liveScrapedAt: string | null;
   page: number;
   totalPages: number;
 }

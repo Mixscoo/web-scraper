@@ -98,8 +98,11 @@ export class AdzunaScraper extends BaseScraper {
     const url = `https://api.adzuna.com/v1/api/jobs/${config.api_country}/search/1?${params.toString()}`;
 
     try {
-      const response = await this.client.get(url, { timeout: 12000 });
-      const results = response.data?.results as AdzunaJob[] | undefined;
+      const response = await fetch(url, {
+        headers: this.headers,
+        signal: AbortSignal.timeout(12000),
+      });
+      const results = (await response.json())?.results as AdzunaJob[] | undefined;
       if (!Array.isArray(results)) return;
 
       for (const item of results) {

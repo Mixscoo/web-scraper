@@ -96,15 +96,16 @@ export class JSearchScraper extends BaseScraper {
     const url = `https://jsearch.p.rapidapi.com/search?${params.toString()}`;
 
     try {
-      const response = await this.client.get(url, {
-        timeout: 15000,
+      const response = await fetch(url, {
         headers: {
+          ...this.headers,
           "X-RapidAPI-Key": apiKey,
           "X-RapidAPI-Host": "jsearch.p.rapidapi.com",
         },
+        signal: AbortSignal.timeout(15000),
       });
 
-      const data = response.data?.data as JSearchJob[] | undefined;
+      const data = (await response.json())?.data as JSearchJob[] | undefined;
       if (!Array.isArray(data)) return;
 
       for (const item of data) {

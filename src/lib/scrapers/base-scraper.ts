@@ -1,4 +1,3 @@
-import axios, { type AxiosInstance } from "axios";
 import * as cheerio from "cheerio";
 import type { Job } from "../types";
 
@@ -13,32 +12,29 @@ const USER_AGENTS = [
 export abstract class BaseScraper {
   protected name: string;
   protected sourceId: string;
-  protected client: AxiosInstance;
+  protected headers: Record<string, string>;
   private maxRetries = 2;
 
   constructor(name: string, sourceId?: string) {
     this.name = name;
     this.sourceId = sourceId ?? name.toLowerCase().replace(/[^a-z0-9]+/g, "");
-    this.client = axios.create({
-      timeout: 10000,
-      headers: {
-        "User-Agent": USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)],
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.5",
-        "Upgrade-Insecure-Requests": "1",
-        "Sec-Fetch-Dest": "document",
-        "Sec-Fetch-Mode": "navigate",
-        "Sec-Fetch-Site": "none",
-        "Sec-Fetch-User": "?1",
-        "Priority": "u=0, i"
-      },
-    });
+    this.headers = {
+      "User-Agent": USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)],
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
+      "Accept-Language": "en-US,en;q=0.5",
+      "Upgrade-Insecure-Requests": "1",
+      "Sec-Fetch-Dest": "document",
+      "Sec-Fetch-Mode": "navigate",
+      "Sec-Fetch-Site": "none",
+      "Sec-Fetch-User": "?1",
+      "Priority": "u=0, i"
+    };
   }
 
   async scrape(query: string, country: string, category?: string): Promise<Job[]> {
     for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
       try {
-        this.client.defaults.headers["User-Agent"] =
+        this.headers["User-Agent"] =
           USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
         return await this.performScrape(query, country, category);
       } catch (error) {
@@ -63,8 +59,12 @@ export abstract class BaseScraper {
   protected abstract performScrape(query: string, country: string, category?: string): Promise<Job[]>;
 
   protected async fetchPage(url: string): Promise<cheerio.CheerioAPI> {
-    const response = await this.client.get(url);
-    return cheerio.load(response.data);
+    const response = await fetch(url, {
+      headers: this.headers,
+      signal: AbortSignal.timeout(10000),
+    });
+    const html = await response.text();
+    return cheerio.load(html);
   }
 
   protected delay(ms: number): Promise<void> {

@@ -83,13 +83,17 @@ export class JoobleScraper extends BaseScraper {
     const url = `https://jooble.org/api/${apiKey}`;
 
     try {
-      const response = await this.client.post(
-        url,
-        { keywords, location: config.location },
-        { timeout: 12000, headers: { "Content-Type": "application/json" } }
-      );
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          ...this.headers,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ keywords, location: config.location }),
+        signal: AbortSignal.timeout(12000),
+      });
 
-      const data = response.data?.jobs as JoobleJob[] | undefined;
+      const data = (await response.json())?.jobs as JoobleJob[] | undefined;
       if (!Array.isArray(data)) return;
 
       for (const item of data) {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod/v4";
 import * as Papa from "papaparse";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { scrapeAll } from "@/lib/scrapers";
 import { cache } from "@/lib/cache";
 import { resolveSourceId } from "@/lib/source-registry";
@@ -173,10 +173,15 @@ export async function GET(request: NextRequest) {
   }
 
   // XLSX
-  const worksheet = XLSX.utils.json_to_sheet(exportData);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Jobs");
-  const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet("Jobs");
+  if (exportData.length > 0) {
+    worksheet.columns = Object.keys(exportData[0]).map((key) => ({ header: key, key }));
+    for (const row of exportData) {
+      worksheet.addRow(row);
+    }
+  }
+  const buffer = await workbook.xlsx.writeBuffer();
 
   return new NextResponse(buffer, {
     headers: {

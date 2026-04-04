@@ -3,27 +3,61 @@ import type { Job } from "../types";
 import { generateJobId, getCityCoordinates, normalizeCategory, extractSalary } from "../utils";
 
 const BASE_URL = "https://www.expatriates.com";
-const DEFAULT_PATHS = [
-  "/classifieds/saudi-arabia/jobs/index.html",
-  "/classifieds/saudi-arabia/jobs/index100.html",
-];
 
-const SAUDI_CITY_MATCHERS: Array<{ city: string; aliases: string[] }> = [
-  { city: "Riyadh", aliases: ["riyadh", "ksa"] },
-  { city: "Jeddah", aliases: ["jeddah"] },
-  { city: "Dammam", aliases: ["dammam", "eastern province"] },
-  { city: "Khobar", aliases: ["khobar", "al khobar"] },
-  { city: "Jubail", aliases: ["jubail"] },
-  { city: "Mecca", aliases: ["mecca", "makkah"] },
-  { city: "Medina", aliases: ["medina", "madinah"] },
-  { city: "Yanbu", aliases: ["yanbu"] },
-  { city: "Tabuk", aliases: ["tabuk"] },
-  { city: "Jizan", aliases: ["jizan", "jazan"] },
-  { city: "Abha", aliases: ["abha"] },
-  { city: "Buraidah", aliases: ["buraidah", "buraydah", "qassim"] },
-  { city: "Al Kharj", aliases: ["al kharj", "kharj"] },
-  { city: "Ras Tanura", aliases: ["ras tanura"] },
-];
+interface CountryConfig {
+  country: string;
+  defaultCity: string;
+  basePath: string;
+  listPaths: string[];
+  cityMatchers: Array<{ city: string; aliases: string[] }>;
+}
+
+const COUNTRY_CONFIG: Record<string, CountryConfig> = {
+  "saudi arabia": {
+    country: "Saudi Arabia",
+    defaultCity: "Riyadh",
+    basePath: "/classifieds/saudi-arabia/jobs/",
+    listPaths: [
+      "/classifieds/saudi-arabia/jobs/index.html",
+      "/classifieds/saudi-arabia/jobs/index100.html",
+    ],
+    cityMatchers: [
+      { city: "Riyadh", aliases: ["riyadh", "ksa"] },
+      { city: "Jeddah", aliases: ["jeddah"] },
+      { city: "Dammam", aliases: ["dammam", "eastern province"] },
+      { city: "Khobar", aliases: ["khobar", "al khobar"] },
+      { city: "Jubail", aliases: ["jubail"] },
+      { city: "Mecca", aliases: ["mecca", "makkah"] },
+      { city: "Medina", aliases: ["medina", "madinah"] },
+      { city: "Yanbu", aliases: ["yanbu"] },
+      { city: "Tabuk", aliases: ["tabuk"] },
+      { city: "Jizan", aliases: ["jizan", "jazan"] },
+      { city: "Abha", aliases: ["abha"] },
+      { city: "Buraidah", aliases: ["buraidah", "buraydah", "qassim"] },
+      { city: "Al Kharj", aliases: ["al kharj", "kharj"] },
+      { city: "Ras Tanura", aliases: ["ras tanura"] },
+    ],
+  },
+  uae: {
+    country: "UAE",
+    defaultCity: "Dubai",
+    basePath: "/classifieds/uae/jobs/",
+    listPaths: [
+      "/classifieds/uae/jobs/index.html",
+      "/classifieds/uae/jobs/index100.html",
+    ],
+    cityMatchers: [
+      { city: "Dubai", aliases: ["dubai"] },
+      { city: "Abu Dhabi", aliases: ["abu dhabi"] },
+      { city: "Sharjah", aliases: ["sharjah"] },
+      { city: "Ajman", aliases: ["ajman"] },
+      { city: "Al Ain", aliases: ["al ain"] },
+      { city: "Fujairah", aliases: ["fujairah"] },
+      { city: "Ras Al Khaimah", aliases: ["ras al khaimah", "ras al khaymah"] },
+      { city: "Umm Al Quwain", aliases: ["umm al quwain", "umm al qaywayn", "umm al qawain"] },
+    ],
+  },
+};
 
 function cleanText(value: string): string {
   return value.replace(/\s+/g, " ").trim();
@@ -40,39 +74,41 @@ function toAbsoluteUrl(href: string | undefined, fallback: string): string {
   return `${BASE_URL}${href}`;
 }
 
-function detectSaudiCity(text: string): string {
+function detectCity(config: CountryConfig, text: string): string {
   const lower = text.toLowerCase();
-  for (const matcher of SAUDI_CITY_MATCHERS) {
+  for (const matcher of config.cityMatchers) {
     if (matcher.aliases.some((alias) => lower.includes(alias))) {
       return matcher.city;
     }
   }
-  return "Riyadh";
+  return config.defaultCity;
 }
 
 export class ExpatriatesScraper extends BaseScraper {
   constructor() {
-    super("Expatriates");
+    super("Expatriates", "expatriates");
   }
 
   protected async performScrape(query: string, country: string): Promise<Job[]> {
-    if (country.toLowerCase() !== "saudi arabia") return [];
+    const config = COUNTRY_CONFIG[country.toLowerCase()];
+    if (!config) return [];
 
     const allJobs: Job[] = [];
     const seenIds = new Set<string>();
 
     const urls = isBroadQuery(query)
-      ? DEFAULT_PATHS.map((path) => `${BASE_URL}${path}`)
-      : [`${BASE_URL}/classifieds/saudi-arabia/jobs/?search=${encodeURIComponent(query.trim())}`];
+      ? config.listPaths.map((path) => `${BASE_URL}${path}`)
+      : [`${BASE_URL}${config.basePath}?search=${encodeURIComponent(query.trim())}`];
 
     await Promise.allSettled(
-      urls.map((url) => this.fetchExpatriatesPage(url, allJobs, seenIds))
+      urls.map((url) => this.fetchExpatriatesPage(config, url, allJobs, seenIds))
     );
 
     return allJobs;
   }
 
   private async fetchExpatriatesPage(
+    config: CountryConfig,
     url: string,
     jobs: Job[],
     seenIds: Set<string>
@@ -96,21 +132,21 @@ export class ExpatriatesScraper extends BaseScraper {
         if (seenIds.has(absoluteUrl)) return;
         seenIds.add(absoluteUrl);
 
-        const detectedCity = detectSaudiCity(`${locationText} ${rawText}`);
+        const detectedCity = detectCity(config, `${locationText} ${rawText}`);
         const company = "Independent Employer";
         const jobId = generateJobId(title, company, `expatriates:${absoluteUrl}`);
         const location = locationText
-          ? locationText.toLowerCase().includes("saudi")
+          ? locationText.toLowerCase().includes(config.country.toLowerCase())
             ? locationText
-            : `${locationText}, Saudi Arabia`
-          : `${detectedCity}, Saudi Arabia`;
+            : `${locationText}, ${config.country}`
+          : `${detectedCity}, ${config.country}`;
 
         jobs.push({
           id: jobId,
           title,
           company,
           location,
-          country: "Saudi Arabia",
+          country: config.country,
           city: detectedCity,
           category: normalizeCategory(title),
           description: rawText.slice(0, 500),

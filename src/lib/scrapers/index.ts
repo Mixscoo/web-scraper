@@ -3,12 +3,14 @@ import { isMiddleEastJob } from "../utils";
 import { jobStore } from "../job-store";
 import { categorizeOtherJobs } from "../ai-categorizer";
 import { sourceHealth } from "../source-health";
+import { sourceSupportsCountry } from "../source-registry";
 import { LinkedInScraper } from "./linkedin";
 import { TalentScraper } from "./talent";
 import { JoobleScraper } from "./jooble";
 import { GrabJobsScraper } from "./careerjet";
 import { OpensooqScraper } from "./opensooq";
 import { GulfTalentScraper } from "./gulftalent";
+import { GulfNewsScraper } from "./gulf-news";
 import { JobrapidoScraper } from "./jobrapido";
 import { Learn4GoodScraper } from "./learn4good";
 import type { BaseScraper } from "./base-scraper";
@@ -19,6 +21,7 @@ const scrapers: BaseScraper[] = [
   new JoobleScraper(),
   new GrabJobsScraper(),
   new GulfTalentScraper(),
+  new GulfNewsScraper(),
   new JobrapidoScraper(),
   new Learn4GoodScraper(),
   new OpensooqScraper(),
@@ -40,6 +43,11 @@ export async function scrapeAll(
   for (const scraper of scrapers) {
     const sourceId = scraper.getSourceId();
     const sourceName = scraper.getSourceName();
+
+    if (!sourceSupportsCountry(sourceId, country)) {
+      continue;
+    }
+
     const gate = await sourceHealth.shouldRun(sourceId, country);
 
     if (!gate.allowed) {

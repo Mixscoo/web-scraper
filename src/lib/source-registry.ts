@@ -33,6 +33,9 @@ function buildSourceAliases(): Map<string, string> {
   aliases.set("talentcom", "talent");
   aliases.set("grabjobs", "grabjobs");
   aliases.set("opensooq", "opensooq");
+  aliases.set("expatriates", "expatriates");
+  aliases.set("gulfnews", "gulfnews");
+  aliases.set("gulfnewsclassifieds", "gulfnews");
   aliases.set("gulftalent", "gulftalent");
   aliases.set("jobrapido", "jobrapido");
   aliases.set("learn4good", "learn4good");
@@ -45,9 +48,40 @@ function buildSourceAliases(): Map<string, string> {
 const sourceAliases = buildSourceAliases();
 const sourceById = new Map<string, Source>(SOURCES.map((source) => [source.id, source]));
 
+function normalizeCountry(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function resolveSource(value: string | null | undefined): Source | null {
+  if (!value) return null;
+
+  const direct = sourceById.get(value);
+  if (direct) return direct;
+
+  const resolvedId = sourceAliases.get(normalizeSourceToken(value));
+  return resolvedId ? sourceById.get(resolvedId) ?? null : null;
+}
+
 export function getSourceById(sourceId: string | null | undefined): Source | null {
   if (!sourceId) return null;
   return sourceById.get(sourceId) ?? null;
+}
+
+export function sourceSupportsCountry(value: string | null | undefined, country: string | null | undefined): boolean {
+  const source = resolveSource(value);
+  if (!source) return false;
+  if (!country) return true;
+
+  if (!source.supportedCountries || source.supportedCountries.length === 0) {
+    return true;
+  }
+
+  const normalizedCountry = normalizeCountry(country);
+  return source.supportedCountries.some((supportedCountry) => normalizeCountry(supportedCountry) === normalizedCountry);
+}
+
+export function getSourcesForCountry(country: string): Source[] {
+  return SOURCES.filter((source) => sourceSupportsCountry(source.id, country));
 }
 
 export function resolveSourceId(value: string | null | undefined): string | null {

@@ -3,7 +3,7 @@ import "server-only";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { SOURCES } from "./constants";
-import { getSourceById } from "./source-registry";
+import { getSourceById, sourceSupportsCountry } from "./source-registry";
 import type { SourceHealthSummary } from "./types";
 
 const ZERO_YIELD_DISABLE_THRESHOLD = 3;
@@ -257,7 +257,7 @@ class SourceHealthStore {
   async getCountrySummary(country: string): Promise<SourceHealthSummary[]> {
     await this.ensureLoaded();
 
-    return SOURCES.map((source) =>
+    return SOURCES.filter((source) => sourceSupportsCountry(source.id, country)).map((source) =>
       toSummary(country, source.id, this.getRecord(source.id, country))
     );
   }

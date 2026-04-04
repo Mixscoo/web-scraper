@@ -13,6 +13,8 @@ export const COUNTRIES = [
   { code: "EG", name: "Egypt", flag: "🇪🇬", coordinates: { lat: 26.82, lng: 30.80 } },
 ] as const;
 
+export const ALL_COUNTRY_NAMES = COUNTRIES.map((country) => country.name);
+
 export const CATEGORIES = [
   { id: "carpenter", name: "Carpenter", icon: "Hammer" },
   { id: "painter", name: "Painter", icon: "Paintbrush" },
@@ -63,6 +65,7 @@ export const SOURCES: Source[] = [
     logo: "/sources/linkedin.svg",
     description: "Professional networking platform with a comprehensive job board for the Middle East.",
     active: true,
+    supportedCountries: ALL_COUNTRY_NAMES,
   },
   {
     id: "talent",
@@ -71,6 +74,7 @@ export const SOURCES: Source[] = [
     logo: "/sources/talentcom.svg",
     description: "Global job aggregator with dedicated Middle East portals covering millions of listings.",
     active: true,
+    supportedCountries: ALL_COUNTRY_NAMES,
   },
   {
     id: "jooble",
@@ -79,6 +83,7 @@ export const SOURCES: Source[] = [
     logo: "/sources/jooble.svg",
     description: "International job aggregator with dedicated portals for all Middle East countries.",
     active: true,
+    supportedCountries: ALL_COUNTRY_NAMES,
   },
   {
     id: "grabjobs",
@@ -87,14 +92,34 @@ export const SOURCES: Source[] = [
     logo: "/sources/grabjobs.svg",
     description: "International job platform with listings across all Middle East countries.",
     active: true,
+    supportedCountries: ALL_COUNTRY_NAMES,
   },
   {
     id: "opensooq",
     name: "OpenSooq",
-    url: "https://jo.opensooq.com",
+    url: "https://www.opensooq.com/",
     logo: "/sources/opensooq.svg",
-    description: "Regional classifieds platform now used for gig, delivery, and home-service listings in Jordan and Saudi Arabia.",
+    description: "Regional classifieds platform used for gig, delivery, and home-service listings in Jordan, Saudi Arabia, and the UAE.",
     active: true,
+    supportedCountries: ["Jordan", "Saudi Arabia", "UAE"],
+  },
+  {
+    id: "expatriates",
+    name: "Expatriates",
+    url: "https://www.expatriates.com/",
+    logo: "/sources/expatriates.svg",
+    description: "Classifieds community with strong informal job coverage in the browser, but kept out of the live scraper rotation because the runtime fetch flow is challenged before listings are returned.",
+    active: false,
+    supportedCountries: ["Saudi Arabia", "UAE"],
+  },
+  {
+    id: "gulfnews",
+    name: "Gulf News Classifieds",
+    url: "https://classifieds.gulfnews.com/jobs/",
+    logo: "/sources/gulfnews.svg",
+    description: "UAE classifieds-style jobs board with operational, hospitality, driving, and office support roles.",
+    active: true,
+    supportedCountries: ["UAE"],
   },
   {
     id: "gulftalent",
@@ -103,6 +128,7 @@ export const SOURCES: Source[] = [
     logo: "/sources/gulftalent.svg",
     description: "Major recruitment portal for mid-to-senior level professionals across Saudi Arabia.",
     active: true,
+    supportedCountries: ["Saudi Arabia"],
   },
   {
     id: "naukrigulf",
@@ -111,6 +137,7 @@ export const SOURCES: Source[] = [
     logo: "/sources/naukrigulf.svg",
     description: "Large Gulf job board currently kept out of the live scraper rotation because server-side fetches time out in this runtime.",
     active: false,
+    supportedCountries: ["Saudi Arabia"],
   },
   {
     id: "jobrapido",
@@ -119,6 +146,7 @@ export const SOURCES: Source[] = [
     logo: "/sources/jobrapido.svg",
     description: "Search aggregator with a large Saudi Arabia index and stable public result pages.",
     active: true,
+    supportedCountries: ["Saudi Arabia"],
   },
   {
     id: "learn4good",
@@ -127,6 +155,7 @@ export const SOURCES: Source[] = [
     logo: "/sources/learn4good.svg",
     description: "Public Saudi job index with many English-language listings across education, healthcare, and technical roles.",
     active: true,
+    supportedCountries: ["Saudi Arabia"],
   },
 ];
 
@@ -162,6 +191,7 @@ export const CITY_COORDINATES: Record<string, { lat: number; lng: number }> = {
   "Ras Al Khaimah": { lat: 25.7895, lng: 55.9432 },
   "Fujairah": { lat: 25.1288, lng: 56.3265 },
   "Al Ain": { lat: 24.1917, lng: 55.7606 },
+  "Umm Al Quwain": { lat: 25.5647, lng: 55.5552 },
   "Musaffah": { lat: 24.3547, lng: 54.4961 },
   "Jumeirah": { lat: 25.2084, lng: 55.2539 },
   // Qatar

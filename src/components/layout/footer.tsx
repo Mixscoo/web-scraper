@@ -56,10 +56,13 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 pt-6 border-t border-black/[0.06] dark:border-white/[0.08]">
-          <p className="text-xs text-neutral-400 dark:text-neutral-500 text-center">
+        <div className="mt-10 pt-6 border-t border-black/[0.06] dark:border-white/[0.08] flex flex-col sm:flex-row items-center justify-between gap-2">
+          <p className="text-xs text-neutral-400 dark:text-neutral-500">
             © {new Date().getFullYear()} JobScraper. This tool aggregates publicly available job listings for
             informational purposes. All job data belongs to the respective job portals.
+          </p>
+          <p className="text-xs text-neutral-400 dark:text-neutral-500 whitespace-nowrap">
+            Developed by <span className="text-black dark:text-white font-medium">Mico Lasola</span>
           </p>
         </div>
       </div>

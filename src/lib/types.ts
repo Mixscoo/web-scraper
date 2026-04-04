@@ -69,6 +69,7 @@ export interface Source {
   logo: string;
   description: string;
   active: boolean;
+  supportedCountries?: readonly string[];
 }
 
 export interface StatsData {

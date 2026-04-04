@@ -46,9 +46,23 @@ export function HowItWorksSection() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-          {/* Connecting line */}
-          <div className="hidden md:block absolute top-16 left-[20%] right-[20%] h-[2px] bg-gradient-to-r from-neutral-200 via-neutral-300 to-neutral-200 dark:from-neutral-800 dark:via-neutral-700 dark:to-neutral-800" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 relative">
+          {/* Connecting lines between steps */}
+          <div className="hidden md:flex absolute top-8 left-0 right-0 z-0 items-center justify-center pointer-events-none">
+            <div className="w-1/3" />
+            <div className="flex-1 flex items-center gap-1">
+              {Array.from({ length: 20 }).map((_, i) => (
+                <div key={`l1-${i}`} className="flex-1 h-[2px] rounded-full bg-neutral-300 dark:bg-neutral-700" />
+              ))}
+            </div>
+            <div className="w-[8%]" />
+            <div className="flex-1 flex items-center gap-1">
+              {Array.from({ length: 20 }).map((_, i) => (
+                <div key={`l2-${i}`} className="flex-1 h-[2px] rounded-full bg-neutral-300 dark:bg-neutral-700" />
+              ))}
+            </div>
+            <div className="w-1/3" />
+          </div>
 
           {steps.map((step, i) => (
             <motion.div

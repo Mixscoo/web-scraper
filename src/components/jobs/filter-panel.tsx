@@ -2,6 +2,7 @@
 
 import { X } from "lucide-react";
 import { CATEGORIES, SOURCES, DATE_FILTERS } from "@/lib/constants";
+import { getSourcesForCountry } from "@/lib/source-registry";
 import type { FilterState } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +15,9 @@ interface FilterPanelProps {
 }
 
 export function FilterPanel({ filters, onChange, availableCategories, onClose, className }: FilterPanelProps) {
+  const visibleSources = (filters.countries[0] ? getSourcesForCountry(filters.countries[0]) : SOURCES)
+    .filter((source) => source.active);
+
   const toggle = (key: "countries" | "categories" | "sources", value: string) => {
     const arr = filters[key];
     const updated = arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value];
@@ -149,7 +153,7 @@ export function FilterPanel({ filters, onChange, availableCategories, onClose, c
           Source
         </h4>
         <div className="space-y-1">
-          {SOURCES.map((source) => (
+          {visibleSources.map((source) => (
             <label
               key={source.id}
               className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-neutral-50 dark:hover:bg-white/5 cursor-pointer transition-colors"

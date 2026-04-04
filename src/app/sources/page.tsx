@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { AlertTriangle, CheckCircle2, Clock3, ExternalLink, XCircle } from "lucide-react";
 import { COUNTRIES, SOURCES } from "@/lib/constants";
+import { getSourcesForCountry } from "@/lib/source-registry";
 import type { SourceHealthResponse, SourceHealthSummary } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -99,6 +100,10 @@ function getInactiveMessage(sourceName: string): string {
     return "Disabled in the live scraper because server-side requests to this site time out before HTML is returned.";
   }
 
+  if (sourceName === "Expatriates") {
+    return "Disabled in the live scraper because the runtime fetch path is challenged before the listings page HTML is returned.";
+  }
+
   return "This source is currently disabled in the live scraper rotation.";
 }
 
@@ -106,6 +111,7 @@ export default function SourcesPage() {
   const [selectedCountry, setSelectedCountry] = useState("Saudi Arabia");
   const [healthBySourceId, setHealthBySourceId] = useState<Record<string, SourceHealthSummary>>({});
   const [loadingHealth, setLoadingHealth] = useState(true);
+  const visibleSources = getSourcesForCountry(selectedCountry);
 
   useEffect(() => {
     let cancelled = false;
@@ -190,7 +196,7 @@ export default function SourcesPage() {
         </motion.div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {SOURCES.map((source, i) => {
+          {visibleSources.map((source, i) => {
             const health = healthBySourceId[source.id];
             const badge = source.active
               ? getHealthBadge(health, loadingHealth)

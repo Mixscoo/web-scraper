@@ -6,7 +6,6 @@ const BASE_URL = "https://www.expatriates.com";
 
 interface CountryConfig {
   country: string;
-  defaultCity: string;
   basePath: string;
   listPaths: string[];
   cityMatchers: Array<{ city: string; aliases: string[] }>;
@@ -15,7 +14,6 @@ interface CountryConfig {
 const COUNTRY_CONFIG: Record<string, CountryConfig> = {
   "saudi arabia": {
     country: "Saudi Arabia",
-    defaultCity: "Riyadh",
     basePath: "/classifieds/saudi-arabia/jobs/",
     listPaths: [
       "/classifieds/saudi-arabia/jobs/index.html",
@@ -40,7 +38,6 @@ const COUNTRY_CONFIG: Record<string, CountryConfig> = {
   },
   uae: {
     country: "UAE",
-    defaultCity: "Dubai",
     basePath: "/classifieds/uae/jobs/",
     listPaths: [
       "/classifieds/uae/jobs/index.html",
@@ -81,7 +78,8 @@ function detectCity(config: CountryConfig, text: string): string {
       return matcher.city;
     }
   }
-  return config.defaultCity;
+  // No city matched — do not guess a capital; leave it unknown.
+  return "";
 }
 
 export class ExpatriatesScraper extends BaseScraper {
@@ -139,7 +137,9 @@ export class ExpatriatesScraper extends BaseScraper {
           ? locationText.toLowerCase().includes(config.country.toLowerCase())
             ? locationText
             : `${locationText}, ${config.country}`
-          : `${detectedCity}, ${config.country}`;
+          : detectedCity
+            ? `${detectedCity}, ${config.country}`
+            : config.country;
 
         jobs.push({
           id: jobId,

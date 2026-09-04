@@ -115,7 +115,7 @@ export class TanqeebScraper extends BaseScraper {
           id: jobId,
           title,
           company: company || "Unknown",
-          location: location || `${detectedCity}, Saudi Arabia`,
+          location: location || (detectedCity ? `${detectedCity}, Saudi Arabia` : "Saudi Arabia"),
           country: "Saudi Arabia",
           city: detectedCity,
           category: normalizeCategory(title),
@@ -145,6 +145,8 @@ export class TanqeebScraper extends BaseScraper {
     if (lower.includes("jubail") || lower.includes("الجبيل")) return "Jubail";
     if (lower.includes("yanbu") || lower.includes("ينبع")) return "Yanbu";
     if (lower.includes("abha") || lower.includes("أبها")) return "Abha";
-    return "Riyadh";
+    // No city matched — do not guess a capital; that attributes the listing to
+    // a city it may have nothing to do with. Leave it unknown.
+    return "";
   }
 }

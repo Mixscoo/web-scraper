@@ -98,7 +98,7 @@ export class LaimoonScraper extends BaseScraper {
           id: jobId,
           title,
           company: company,
-          location: `${detectedCity}, Saudi Arabia`,
+          location: detectedCity ? `${detectedCity}, Saudi Arabia` : "Saudi Arabia",
           country: "Saudi Arabia",
           city: detectedCity,
           category: normalizeCategory(title),
@@ -128,6 +128,8 @@ export class LaimoonScraper extends BaseScraper {
     if (lower.includes("jubail") || lower.includes("丕賱噩亘賷賱")) return "Jubail";
     if (lower.includes("yanbu") || lower.includes("賷賳亘毓")) return "Yanbu";
     if (lower.includes("abha") || lower.includes("兀亘賴丕")) return "Abha";
-    return "Riyadh";
+    // No city matched — do not guess a capital; that attributes the listing to
+    // a city it may have nothing to do with. Leave it unknown.
+    return "";
   }
 }

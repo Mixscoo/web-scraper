@@ -5,7 +5,6 @@ import { normalizeCategory, extractSalary, isMiddleEastJob } from "../utils";
 interface CountryConfig {
   country: string;
   baseUrl: string;
-  defaultCity: string;
   keywords: string[];
   cityMatchers: Array<{ city: string; aliases: string[] }>;
 }
@@ -14,7 +13,6 @@ const COUNTRY_CONFIG: Record<string, CountryConfig> = {
   jordan: {
     country: "Jordan",
     baseUrl: "https://jo.opensooq.com",
-    defaultCity: "Amman",
     keywords: [
       "تنظيف",
       "خادمة",
@@ -40,7 +38,6 @@ const COUNTRY_CONFIG: Record<string, CountryConfig> = {
   "saudi arabia": {
     country: "Saudi Arabia",
     baseUrl: "https://sa.opensooq.com",
-    defaultCity: "Riyadh",
     keywords: [
       "سائق",
       "توصيل",
@@ -76,7 +73,6 @@ const COUNTRY_CONFIG: Record<string, CountryConfig> = {
   uae: {
     country: "UAE",
     baseUrl: "https://ae.opensooq.com",
-    defaultCity: "Dubai",
     keywords: [
       "سائق",
       "توصيل",
@@ -122,7 +118,10 @@ function detectCity(config: CountryConfig, text: string): string {
     }
   }
 
-  return config.defaultCity;
+  // No city matched. Defaulting to a capital would attribute the listing to a
+  // city it may have nothing to do with, inflating that city in Providers by
+  // City. Leave it unknown — getStats skips empty cities.
+  return "";
 }
 
 export class OpensooqScraper extends BaseScraper {
@@ -167,7 +166,7 @@ export class OpensooqScraper extends BaseScraper {
                 id: `os-${id}`,
                 title: title,
                 company: company,
-                location: `${city}, ${config.country}`,
+                location: city ? `${city}, ${config.country}` : config.country,
                 country: config.country,
                 city: city,
                 category: category,

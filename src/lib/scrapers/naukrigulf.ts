@@ -62,7 +62,8 @@ function detectSaudiCity(text: string): string {
       return matcher.city;
     }
   }
-  return "Riyadh";
+  // No city matched — do not guess a capital; leave it unknown.
+  return "";
 }
 
 function parsePostedDate(value: string): string {
@@ -161,7 +162,7 @@ export class NaukriGulfScraper extends BaseScraper {
         const description = cleanText($el.find("p.description").first().text()) || title;
         const postedDateText = cleanText($el.find("span.time").first().text());
         const city = detectSaudiCity(`${locationText} ${description}`);
-        const location = locationText || `${city}, Saudi Arabia`;
+        const location = locationText || (city ? `${city}, Saudi Arabia` : "Saudi Arabia");
 
         seenUrls.add(sourceUrl);
 

@@ -43,7 +43,10 @@ function detectSaudiCity(text: string): string {
       return matcher.city;
     }
   }
-  return "Riyadh";
+  // No city matched. Defaulting to a capital would attribute the listing to a
+  // city it may have nothing to do with, inflating that city in Providers by
+  // City. Leave it unknown — getStats skips empty cities.
+  return "";
 }
 
 function toAbsoluteUrl(href: string | undefined, fallback: string): string {
@@ -122,7 +125,9 @@ export class JobrapidoScraper extends BaseScraper {
           ? locationLine.toLowerCase().includes("saudi")
             ? locationLine
             : `${locationLine}, Saudi Arabia`
-          : `${city}, Saudi Arabia`;
+          : city
+            ? `${city}, Saudi Arabia`
+            : "Saudi Arabia";
         const company = companyLine || "Unknown Company";
         const description = cleanText($el.text()).slice(0, 500);
 

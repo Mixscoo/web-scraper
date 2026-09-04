@@ -116,7 +116,7 @@ export class GulfTalentScraper extends BaseScraper {
           id: jobId,
           title,
           company: company,
-          location: `${detectedCity}, Saudi Arabia`,
+          location: detectedCity ? `${detectedCity}, Saudi Arabia` : "Saudi Arabia",
           country: "Saudi Arabia",
           city: detectedCity,
           category: normalizeCategory(title),
@@ -146,6 +146,7 @@ export class GulfTalentScraper extends BaseScraper {
     if (lower.includes("jubail") || lower.includes("الجبيل")) return "Jubail";
     if (lower.includes("yanbu") || lower.includes("ينبع")) return "Yanbu";
     if (lower.includes("abha") || lower.includes("أبها")) return "Abha";
-    return "Riyadh";
+    // No city matched — see note in the other Saudi scrapers; do not guess Riyadh.
+    return "";
   }
 }

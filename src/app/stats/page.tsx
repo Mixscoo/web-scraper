@@ -64,11 +64,12 @@ export default function StatsPage() {
   const [error, setError] = useState<string | null>(null);
   const [scraping, setScraping] = useState(false);
   const [categoryCardRef, categoryCardWidth] = useElementWidth<HTMLDivElement>();
-  const [cityCardRef, cityCardWidth] = useElementWidth<HTMLDivElement>();
 
   // Below this the outside labels no longer fit beside the pie; show a legend.
   const CATEGORY_LABELS_FIT = categoryCardWidth >= 360;
-  const CITY_LABELS_FIT = cityCardWidth >= 360;
+
+  const cityData = (stats?.jobsByCity ?? []).slice(0, 10);
+  const cityTotal = (stats?.jobsByCity ?? []).reduce((sum, c) => sum + c.count, 0);
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
   const chartColors = isDark ? CHART_COLORS_DARK : CHART_COLORS_LIGHT;
@@ -446,50 +447,41 @@ export default function StatsPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 1.0 }}
                   className="card p-6 min-w-0"
-                  ref={cityCardRef}
                 >
                   <div className="flex items-center gap-2 mb-4">
                     <MapPin className="h-4 w-4 text-black dark:text-white" />
                     <h3 className="text-sm font-semibold text-black dark:text-white">Providers by City</h3>
+                    <span className="text-xs text-neutral-400 dark:text-neutral-500 ml-auto">
+                      Top {cityData.length} of {stats.jobsByCity.length}
+                    </span>
                   </div>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        data={stats.jobsByCity.slice(0, 8)}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={CITY_LABELS_FIT ? "70%" : "80%"}
-                        dataKey="count"
-                        nameKey="name"
-                        label={
-                          CITY_LABELS_FIT
-                            ? ({ name, percent, x, y, textAnchor }) => (
-                                <text x={x} y={y} textAnchor={textAnchor} fill="var(--foreground)" fontSize={10}>
-                                  {`${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
-                                </text>
-                              )
-                            : false
-                        }
-                        labelLine={false}
-                        fontSize={10}
-                        fill="var(--foreground)"
-                      >
-                        {stats.jobsByCity.slice(0, 8).map((_, i) => (
+                  {/* A horizontal bar, not a pie: one city routinely holds ~90% of
+                      listings and the rest are 1% slivers whose slice labels all
+                      converge on the same angle and overlap. Bars put every name on
+                      the axis, so long and right-to-left city names stay readable
+                      however many cities the scrape turns up. */}
+                  <ResponsiveContainer width="100%" height={Math.max(260, cityData.length * 30)}>
+                    <BarChart data={cityData} layout="vertical" margin={{ left: 4, right: 16 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
+                      <XAxis type="number" tick={{ fontSize: 11 }} stroke="var(--muted-fg)" allowDecimals={false} />
+                      <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} width="auto" stroke="var(--muted-fg)" />
+                      <Tooltip
+                        formatter={(value) => {
+                          const count = Number(value);
+                          const pct = cityTotal > 0 ? ((count / cityTotal) * 100).toFixed(1) : "0";
+                          return [`${count} (${pct}%)`, "Providers"];
+                        }}
+                        contentStyle={tooltipStyle.contentStyle}
+                        labelStyle={tooltipStyle.labelStyle}
+                        itemStyle={tooltipStyle.itemStyle}
+                        cursor={{ fill: "var(--card-border)" }}
+                      />
+                      <Bar dataKey="count" radius={[0, 4, 4, 0]}>
+                        {cityData.map((_, i) => (
                           <Cell key={i} fill={chartColors[i % chartColors.length]} />
                         ))}
-                      </Pie>
-                      <Tooltip {...tooltipStyle} />
-                      {!CITY_LABELS_FIT && (
-                        <Legend
-                          verticalAlign="bottom"
-                          height={48}
-                          iconSize={8}
-                          formatter={(value) => (
-                            <span style={{ color: "var(--foreground)", fontSize: 10 }}>{value}</span>
-                          )}
-                        />
-                      )}
-                    </PieChart>
+                      </Bar>
+                    </BarChart>
                   </ResponsiveContainer>
                 </motion.div>
               )}

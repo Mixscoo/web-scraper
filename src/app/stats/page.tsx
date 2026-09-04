@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line,
+  PieChart, Pie, Cell, LineChart, Line, Legend,
 } from "recharts";
-import { Briefcase, Globe, Radio, TrendingUp, Building2, MapPin, DollarSign, BarChart3 , HelpCircle } from "lucide-react";
+import { Briefcase, Globe, Radio, TrendingUp, Building2, MapPin, DollarSign, BarChart3 , HelpCircle, AlertCircle, RotateCw } from "lucide-react";
 import { useTheme } from "next-themes";
 import { COUNTRIES } from "@/lib/constants";
 import type { StatsData } from "@/lib/types";
@@ -14,6 +14,29 @@ import { cn } from "@/lib/utils";
 
 const CHART_COLORS_LIGHT = ["#111111", "#B8860B", "#2E8B57", "#C05746", "#3A6EA5", "#8B5DA0", "#5D8A3C", "#D4763A", "#2A7B8E", "#A67C3D"];
 const CHART_COLORS_DARK = ["#F5F5F5", "#E8C44A", "#4ADE80", "#F87171", "#60A5FA", "#C084FC", "#86D460", "#FB923C", "#38BDF8", "#FBBF24"];
+
+// Recharts sizes pies and axes in pixels, so a card narrower than the chart
+// makes it overflow instead of shrink. Measuring the card lets us swap outside
+// labels for a legend once there is no longer room to draw them.
+function useElementWidth<T extends HTMLElement>() {
+  const [width, setWidth] = useState(0);
+  const observerRef = useRef<ResizeObserver | null>(null);
+
+  // A callback ref, not useRef + useEffect: these cards mount only once stats
+  // have loaded, so an effect with [] deps would run while the node is still
+  // null and never attach the observer (leaving width stuck at 0).
+  const ref = useCallback((node: T | null) => {
+    observerRef.current?.disconnect();
+    if (!node) return;
+
+    setWidth(node.getBoundingClientRect().width);
+    const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
+    observer.observe(node);
+    observerRef.current = observer;
+  }, []);
+
+  return [ref, width] as const;
+}
 
 function StatCard({ icon: Icon, label, value, delay }: { icon: typeof Briefcase; label: string; value: string | number; delay: number }) {
   return (
@@ -38,6 +61,14 @@ export default function StatsPage() {
   const [stats, setStats] = useState<StatsData | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<string>("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [scraping, setScraping] = useState(false);
+  const [categoryCardRef, categoryCardWidth] = useElementWidth<HTMLDivElement>();
+  const [cityCardRef, cityCardWidth] = useElementWidth<HTMLDivElement>();
+
+  // Below this the outside labels no longer fit beside the pie; show a legend.
+  const CATEGORY_LABELS_FIT = categoryCardWidth >= 360;
+  const CITY_LABELS_FIT = cityCardWidth >= 360;
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
   const chartColors = isDark ? CHART_COLORS_DARK : CHART_COLORS_LIGHT;
@@ -55,19 +86,49 @@ export default function StatsPage() {
     itemStyle: { color: "var(--foreground)" },
   };
 
-  const fetchStats = useCallback((country?: string) => {
+  const fetchStats = useCallback(async (country?: string, signal?: AbortSignal) => {
     setLoading(true);
+    setError(null);
     const params = country ? `?country=${encodeURIComponent(country)}` : "";
-    fetch(`/api/stats${params}`)
-      .then((r) => r.json())
-      .then((data) => {
-        setStats(data);
-        setLoading(false);
-      });
+    try {
+      const res = await fetch(`/api/stats${params}`, { cache: "no-store", signal });
+      if (!res.ok) throw new Error(`Statistics request failed (${res.status})`);
+      const data: StatsData = await res.json();
+      setStats(data);
+      setLoading(false);
+    } catch (e) {
+      // A superseded request was cancelled — the newer one owns the state now.
+      if (e instanceof DOMException && e.name === "AbortError") return;
+      setError(e instanceof Error ? e.message : "Failed to load statistics");
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    fetchStats(selectedCountry || undefined);
+    const controller = new AbortController();
+    fetchStats(selectedCountry || undefined, controller.signal);
+    return () => controller.abort();
+  }, [selectedCountry, fetchStats]);
+
+  // Scraping is opt-in from the empty state: it takes a couple of minutes, so
+  // it must never block the initial render of this page.
+  const runScrape = useCallback(async () => {
+    setScraping(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams({
+        q: "household services",
+        country: selectedCountry || "Jordan",
+      });
+      const res = await fetch(`/api/scrape?${params.toString()}`, { cache: "no-store" });
+      if (!res.ok) throw new Error(`Scrape failed (${res.status})`);
+      await res.json();
+      await fetchStats(selectedCountry || undefined);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Scrape failed");
+    } finally {
+      setScraping(false);
+    }
   }, [selectedCountry, fetchStats]);
 
   return (
@@ -118,11 +179,37 @@ export default function StatsPage() {
           ))}
         </div>
 
-        {loading || !stats ? (
+        {scraping ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-black dark:border-white border-t-transparent" />
+            <h3 className="text-lg font-semibold text-black dark:text-white">
+              Scraping {selectedCountry || "Jordan"}…
+            </h3>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-sm">
+              Collecting listings from every active source. This usually takes one to
+              three minutes — you can leave this page open.
+            </p>
+          </div>
+        ) : loading || (!stats && !error) ? (
           <div className="flex items-center justify-center py-20">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-black dark:border-white border-t-transparent" />
           </div>
-        ) : stats.totalJobs === 0 ? (
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-neutral-100 dark:bg-white/5 flex items-center justify-center">
+              <AlertCircle className="h-8 w-8 text-neutral-300 dark:text-neutral-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-black dark:text-white">Couldn&apos;t load statistics</h3>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-sm">{error}</p>
+            <button
+              onClick={() => fetchStats(selectedCountry || undefined)}
+              className="flex items-center justify-center gap-2 rounded-xl bg-black px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-200"
+            >
+              <RotateCw className="h-4 w-4" />
+              Try again
+            </button>
+          </div>
+        ) : !stats || stats.totalJobs === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
             <div className="w-16 h-16 rounded-2xl bg-neutral-100 dark:bg-white/5 flex items-center justify-center">
               <Briefcase className="h-8 w-8 text-neutral-300 dark:text-neutral-600" />
@@ -130,9 +217,16 @@ export default function StatsPage() {
             <h3 className="text-lg font-semibold text-black dark:text-white">No data yet</h3>
             <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-sm">
               {selectedCountry
-                ? `No jobs have been scraped for ${selectedCountry} yet. Go to the Jobs page and browse this country first.`
-                : "No jobs have been scraped yet. Go to the Jobs page and browse a country to start collecting data."}
+                ? `No jobs have been scraped for ${selectedCountry} yet. Scrape it now, or browse this country on the Jobs page.`
+                : "No jobs have been scraped yet. Scrape a country now, or browse one on the Jobs page to start collecting data."}
             </p>
+            <button
+              onClick={runScrape}
+              className="flex items-center justify-center gap-2 rounded-xl bg-black px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-200"
+            >
+              <RotateCw className="h-4 w-4" />
+              Scrape {selectedCountry || "Jordan"} now
+            </button>
           </div>
         ) : (
           <>
@@ -173,7 +267,8 @@ export default function StatsPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.5 }}
-                  className="card p-6"
+                  className="card p-6 min-w-0"
+                  ref={categoryCardRef}
                 >
                   <h3 className="text-sm font-semibold text-black dark:text-white mb-4">Providers by Category</h3>
                   <ResponsiveContainer width="100%" height={300}>
@@ -182,14 +277,18 @@ export default function StatsPage() {
                         data={stats.jobsByCategory.slice(0, 8)}
                         cx="50%"
                         cy="50%"
-                        outerRadius={100}
+                        outerRadius={CATEGORY_LABELS_FIT ? "70%" : "80%"}
                         dataKey="count"
                         nameKey="name"
-                        label={({ name, x, y, textAnchor }) => (
-                          <text x={x} y={y} textAnchor={textAnchor} fill="var(--foreground)" fontSize={10} className="capitalize">
-                            {name?.replace(/-/g, " ") || ""}
-                          </text>
-                        )}
+                        label={
+                          CATEGORY_LABELS_FIT
+                            ? ({ name, x, y, textAnchor }) => (
+                                <text x={x} y={y} textAnchor={textAnchor} fill="var(--foreground)" fontSize={10} className="capitalize">
+                                  {name?.replace(/-/g, " ") || ""}
+                                </text>
+                              )
+                            : false
+                        }
                         labelLine={false}
                         fontSize={10}
                         fill="var(--foreground)"
@@ -200,6 +299,18 @@ export default function StatsPage() {
                         ))}
                       </Pie>
                       <Tooltip {...tooltipStyle} />
+                      {!CATEGORY_LABELS_FIT && (
+                        <Legend
+                          verticalAlign="bottom"
+                          height={48}
+                          iconSize={8}
+                          formatter={(value) => (
+                            <span style={{ color: "var(--foreground)", fontSize: 10, textTransform: "capitalize" }}>
+                              {String(value).replace(/-/g, " ")}
+                            </span>
+                          )}
+                        />
+                      )}
                     </PieChart>
                   </ResponsiveContainer>
                 </motion.div>
@@ -239,7 +350,7 @@ export default function StatsPage() {
                     <BarChart data={stats.jobsBySource} layout="vertical">
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
                       <XAxis type="number" tick={{ fontSize: 11 }} stroke="var(--muted-fg)" />
-                      <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} width={100} stroke="var(--muted-fg)" />
+                      <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} width="auto" stroke="var(--muted-fg)" />
                       <Tooltip {...tooltipStyle} cursor={{ fill: "var(--card-border)" }} />
                       <Bar dataKey="count" radius={[0, 4, 4, 0]}>
                         {stats.jobsBySource.map((_, i) => (
@@ -304,7 +415,7 @@ export default function StatsPage() {
                     <BarChart data={stats.demandRanking} layout="vertical" margin={{ left: 10 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
                       <XAxis type="number" tick={{ fontSize: 11 }} stroke="var(--muted-fg)" />
-                      <YAxis dataKey="category" type="category" tick={{ fontSize: 11 }} width={140} stroke="var(--muted-fg)" />
+                      <YAxis dataKey="category" type="category" tick={{ fontSize: 11 }} width="auto" stroke="var(--muted-fg)" />
                       <Tooltip
                         formatter={(value, _name, props) => {
                           const pct = (props.payload as { percentage?: number })?.percentage ?? 0;
@@ -334,7 +445,8 @@ export default function StatsPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 1.0 }}
-                  className="card p-6"
+                  className="card p-6 min-w-0"
+                  ref={cityCardRef}
                 >
                   <div className="flex items-center gap-2 mb-4">
                     <MapPin className="h-4 w-4 text-black dark:text-white" />
@@ -346,14 +458,18 @@ export default function StatsPage() {
                         data={stats.jobsByCity.slice(0, 8)}
                         cx="50%"
                         cy="50%"
-                        outerRadius={100}
+                        outerRadius={CITY_LABELS_FIT ? "70%" : "80%"}
                         dataKey="count"
                         nameKey="name"
-                        label={({ name, percent, x, y, textAnchor }) => (
-                          <text x={x} y={y} textAnchor={textAnchor} fill="var(--foreground)" fontSize={10}>
-                            {`${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
-                          </text>
-                        )}
+                        label={
+                          CITY_LABELS_FIT
+                            ? ({ name, percent, x, y, textAnchor }) => (
+                                <text x={x} y={y} textAnchor={textAnchor} fill="var(--foreground)" fontSize={10}>
+                                  {`${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
+                                </text>
+                              )
+                            : false
+                        }
                         labelLine={false}
                         fontSize={10}
                         fill="var(--foreground)"
@@ -363,6 +479,16 @@ export default function StatsPage() {
                         ))}
                       </Pie>
                       <Tooltip {...tooltipStyle} />
+                      {!CITY_LABELS_FIT && (
+                        <Legend
+                          verticalAlign="bottom"
+                          height={48}
+                          iconSize={8}
+                          formatter={(value) => (
+                            <span style={{ color: "var(--foreground)", fontSize: 10 }}>{value}</span>
+                          )}
+                        />
+                      )}
                     </PieChart>
                   </ResponsiveContainer>
                 </motion.div>
@@ -442,7 +568,7 @@ export default function StatsPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 1.3 }}
-                  className="card p-6 lg:col-span-3"
+                  className="card p-6 lg:col-span-2"
                 >
                   <div className="flex items-center gap-2 mb-4">
                     <HelpCircle className="h-4 w-4 text-[var(--accent)]" />

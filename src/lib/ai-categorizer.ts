@@ -5,6 +5,12 @@ import { CATEGORIES } from "./constants";
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
   baseURL: "https://z.apiyihe.org/v1", // Custom proxy endpoint
+  // Batches run sequentially inside scrapeAll, and the SDK defaults to a
+  // 10-minute timeout with 2 retries — an unresponsive proxy could stall a
+  // scrape for half an hour. Categorization is a best-effort fallback, so fail
+  // fast and let the caller drop back to "other".
+  timeout: 20_000,
+  maxRetries: 1,
 });
 
 export async function categorizeOtherJobs(titles: string[]): Promise<string[]> {

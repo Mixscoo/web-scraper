@@ -375,13 +375,16 @@ export default function StatsPage() {
                     <Building2 className="h-4 w-4 text-black dark:text-white" />
                     <h3 className="text-sm font-semibold text-black dark:text-white">Top Companies</h3>
                   </div>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={stats.topCompanies}>
+                  {/* Horizontal, like Providers by City: company names are long
+                      ("The Ritz-Carlton Hotel Company, L.L.C.") and collided with
+                      each other as angled labels under a vertical bar chart. */}
+                  <ResponsiveContainer width="100%" height={Math.max(300, stats.topCompanies.length * 30)}>
+                    <BarChart data={stats.topCompanies} layout="vertical" margin={{ left: 4, right: 16 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
-                      <XAxis dataKey="name" tick={{ fontSize: 10 }} stroke="var(--muted-fg)" angle={-25} textAnchor="end" height={60} />
-                      <YAxis tick={{ fontSize: 11 }} stroke="var(--muted-fg)" />
+                      <XAxis type="number" tick={{ fontSize: 11 }} stroke="var(--muted-fg)" allowDecimals={false} />
+                      <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} width="auto" stroke="var(--muted-fg)" />
                       <Tooltip {...tooltipStyle} cursor={{ fill: "var(--card-border)" }} />
-                      <Bar dataKey="count" fill={primaryColor} radius={[4, 4, 0, 0]}>
+                      <Bar dataKey="count" radius={[0, 4, 4, 0]}>
                         {stats.topCompanies.map((_, i) => (
                           <Cell key={i} fill={chartColors[i % chartColors.length]} />
                         ))}

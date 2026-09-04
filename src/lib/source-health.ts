@@ -5,6 +5,7 @@ import path from "node:path";
 import { SOURCES } from "./constants";
 import { getSourceById, sourceSupportsCountry } from "./source-registry";
 import type { SourceHealthSummary } from "./types";
+import { processSingleton } from "./singleton";
 
 const ZERO_YIELD_DISABLE_THRESHOLD = 3;
 const FAILURE_DISABLE_THRESHOLD = 2;
@@ -263,4 +264,4 @@ class SourceHealthStore {
   }
 }
 
-export const sourceHealth = new SourceHealthStore();
+export const sourceHealth = processSingleton("sourceHealth", () => new SourceHealthStore());

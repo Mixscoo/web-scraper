@@ -1,5 +1,6 @@
 import type { Job, StatsData } from "./types";
 import { COUNTRIES, SOURCES } from "./constants";
+import { processSingleton } from "./singleton";
 
 class JobStore {
   private jobs = new Map<string, Job>();
@@ -206,4 +207,4 @@ class JobStore {
   }
 }
 
-export const jobStore = new JobStore();
+export const jobStore = processSingleton("jobStore", () => new JobStore());

@@ -1,3 +1,5 @@
+import { processSingleton } from "./singleton";
+
 interface CacheEntry<T> {
   data: T;
   timestamp: number;
@@ -43,4 +45,4 @@ class MemoryCache {
   }
 }
 
-export const cache = new MemoryCache();
+export const cache = processSingleton("cache", () => new MemoryCache());

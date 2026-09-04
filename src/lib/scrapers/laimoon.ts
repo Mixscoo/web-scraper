@@ -119,15 +119,15 @@ export class LaimoonScraper extends BaseScraper {
 
   private detectCity(text: string): string {
     const lower = text.toLowerCase();
-    if (lower.includes("jeddah") || lower.includes("噩丿丞")) return "Jeddah";
-    if (lower.includes("dammam") || lower.includes("丕賱丿賲丕賲")) return "Dammam";
-    if (lower.includes("mecca") || lower.includes("makkah") || lower.includes("賲賰丞")) return "Mecca";
-    if (lower.includes("medina") || lower.includes("madinah") || lower.includes("丕賱賲丿賷賳丞")) return "Medina";
-    if (lower.includes("khobar") || lower.includes("丕賱禺亘乇")) return "Khobar";
-    if (lower.includes("tabuk") || lower.includes("鬲亘賵賰")) return "Tabuk";
-    if (lower.includes("jubail") || lower.includes("丕賱噩亘賷賱")) return "Jubail";
-    if (lower.includes("yanbu") || lower.includes("賷賳亘毓")) return "Yanbu";
-    if (lower.includes("abha") || lower.includes("兀亘賴丕")) return "Abha";
+    if (lower.includes("jeddah") || lower.includes("جدة")) return "Jeddah";
+    if (lower.includes("dammam") || lower.includes("الدمام")) return "Dammam";
+    if (lower.includes("mecca") || lower.includes("makkah") || lower.includes("مكة")) return "Mecca";
+    if (lower.includes("medina") || lower.includes("madinah") || lower.includes("المدينة")) return "Medina";
+    if (lower.includes("khobar") || lower.includes("الخبر")) return "Khobar";
+    if (lower.includes("tabuk") || lower.includes("تبوك")) return "Tabuk";
+    if (lower.includes("jubail") || lower.includes("الجبيل")) return "Jubail";
+    if (lower.includes("yanbu") || lower.includes("ينبع")) return "Yanbu";
+    if (lower.includes("abha") || lower.includes("أبها")) return "Abha";
     // No city matched — do not guess a capital; that attributes the listing to
     // a city it may have nothing to do with. Leave it unknown.
     return "";

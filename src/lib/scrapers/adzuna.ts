@@ -1,6 +1,6 @@
 import { BaseScraper } from "./base-scraper";
 import type { Job } from "../types";
-import { generateJobId, getCityCoordinates, normalizeCategory } from "../utils";
+import { generateJobId, getCityCoordinates, normalizeCategory, normalizeCity } from "../utils";
 
 // Adzuna supports these ME countries (2-letter codes for their API)
 const COUNTRY_CONFIG: Record<string, { api_country: string; location: string }> = {
@@ -117,7 +117,7 @@ export class AdzunaScraper extends BaseScraper {
           company,
           location: loc,
           country,
-          city: loc.split(",")[0]?.trim() || "",
+          city: normalizeCity(loc.split(",")[0]),
           category: normalizeCategory(item.title),
           description: item.description?.substring(0, 200) || item.title,
           salary: formatAdzunaSalary(item),

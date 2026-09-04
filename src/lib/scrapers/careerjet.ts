@@ -1,6 +1,6 @@
 import { BaseScraper } from "./base-scraper";
 import type { Job } from "../types";
-import { generateJobId, getCityCoordinates, normalizeCategory, extractSalary } from "../utils";
+import { generateJobId, getCityCoordinates, normalizeCategory, extractSalary, normalizeCity } from "../utils";
 
 // Extended coverage: fetches page 2 from Talent.com (for countries with subdomains)
 // or LinkedIn page 2 at country level (for countries without Talent.com subdomains)
@@ -132,7 +132,7 @@ export class GrabJobsScraper extends BaseScraper {
             company,
             location: loc || country,
             country,
-            city: loc.split(",")[0]?.trim() || "",
+            city: normalizeCity(loc.split(",")[0]),
             category: normalizeCategory(title),
             description: title,
             salary: extractSalary(title),
@@ -184,7 +184,7 @@ export class GrabJobsScraper extends BaseScraper {
             company,
             location: loc || location,
             country,
-            city: loc.split(",")[0]?.trim() || "",
+            city: normalizeCity(loc.split(",")[0]),
             category: normalizeCategory(title),
             description: title,
             salary: extractSalary(title),

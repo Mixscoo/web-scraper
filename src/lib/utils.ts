@@ -25,6 +25,76 @@ export function formatDate(dateStr: string): string {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
+// A country name is not a city. Scrapers derive city from the first
+// comma-segment of a location string, so a listing carrying only a country
+// ("United Arab Emirates") yields the country as the city — producing bogus
+// bars in Providers by City, and splitting one country across several aliases
+// ("UAE" vs "United Arab Emirates"). Returning "" marks the city unknown, which
+// getStats already skips.
+const COUNTRY_NAMES_AS_CITY = new Set<string>([
+  ...COUNTRIES.map((c) => c.name.toLowerCase()),
+  ...COUNTRIES.map((c) => c.code.toLowerCase()),
+  "uae",
+  "u.a.e",
+  "u.a.e.",
+  "united arab emirates",
+  "ksa",
+  "k.s.a",
+  "saudi",
+  "saudia",
+  "kingdom of saudi arabia",
+  "hashemite kingdom of jordan",
+  "kingdom of bahrain",
+  "sultanate of oman",
+  "state of qatar",
+  "state of kuwait",
+  "republic of iraq",
+  "lebanese republic",
+  "arab republic of egypt",
+  "middle east",
+  "gulf",
+  "remote",
+  "unknown",
+]);
+
+// Latin-script spelling variants of the same city, folded onto the canonical
+// name used in CITY_COORDINATES so they aggregate into one bar.
+const CITY_ALIASES: Record<string, string> = {
+  "jiddah": "Jeddah",
+  "jidda": "Jeddah",
+  "al khobar": "Khobar",
+  "al-khobar": "Khobar",
+  "alkhobar": "Khobar",
+  "makkah": "Mecca",
+  "makkah al mukarramah": "Mecca",
+  "madinah": "Medina",
+  "al madinah": "Medina",
+  "medinah": "Medina",
+  "ad dammam": "Dammam",
+  "al dammam": "Dammam",
+  "ar riyadh": "Riyadh",
+  "al riyadh": "Riyadh",
+  "riyad": "Riyadh",
+  "abu zaby": "Abu Dhabi",
+  "abudhabi": "Abu Dhabi",
+  "ras al khaymah": "Ras Al Khaimah",
+  "ras alkhaimah": "Ras Al Khaimah",
+  "umm al qaywayn": "Umm Al Quwain",
+  "umm al qawain": "Umm Al Quwain",
+  "al ain city": "Al Ain",
+  "amman governorate": "Amman",
+};
+
+export function normalizeCity(candidate: string | undefined | null): string {
+  const city = (candidate ?? "").trim();
+  if (!city) return "";
+
+  const lower = city.toLowerCase();
+  if (COUNTRY_NAMES_AS_CITY.has(lower)) return "";
+
+  return ARABIC_CITY_TO_CANONICAL[city] ?? CITY_ALIASES[lower] ?? city;
+}
+
 export function getCityCoordinates(city: string): { lat: number; lng: number } | null {
   for (const [name, coords] of Object.entries(CITY_COORDINATES)) {
     if (city.toLowerCase().includes(name.toLowerCase())) {
@@ -116,30 +186,37 @@ const ME_COUNTRY_NAMES = COUNTRIES.map((c) => c.name.toLowerCase());
 const ME_COUNTRY_CODES = new Set(COUNTRIES.map((c) => c.code.toLowerCase()));
 const ME_CITY_NAMES = Object.keys(CITY_COORDINATES).map((c) => c.toLowerCase());
 
-// Common Arabic city name variants returned by APIs like JSearch
-const ARABIC_CITY_NAMES = [
-  "Ø¹Ù…Ù‘Ø§Ù†", "Ø¹Ù…Ø§Ù†", // Amman
-  "Ø¥Ø±Ø¨Ø¯", // Irbid
-  "Ø§Ù„Ø²Ø±Ù‚Ø§Ø¡", // Zarqa
-  "Ø§Ù„Ø¹Ù‚Ø¨Ø©", // Aqaba
-  "Ø§Ù„Ø±ÙŠØ§Ø¶", // Riyadh
-  "Ø¬Ø¯Ø©", "Ø¬Ø¯Ù‡", // Jeddah
-  "Ø¯Ø¨ÙŠ", // Dubai
-  "Ø£Ø¨ÙˆØ¸Ø¨ÙŠ", "Ø£Ø¨Ùˆ Ø¸Ø¨ÙŠ", // Abu Dhabi
-  "Ø§Ù„Ø¯ÙˆØ­Ø©", // Doha
-  "Ø§Ù„Ù…Ù†Ø§Ù…Ø©", // Manama
-  "Ø§Ù„ÙƒÙˆÙŠØª", // Kuwait City
-  "Ù…Ø³Ù‚Ø·", // Muscat
-  "Ø¨ØºØ¯Ø§Ø¯", // Baghdad
-  "Ø£Ø±Ø¨ÙŠÙ„", // Erbil
-  "Ø¨ÙŠØ±ÙˆØª", // Beirut
-  "Ø§Ù„Ù‚Ø§Ù‡Ø±Ø©", // Cairo
-  "Ø§Ù„Ø¥Ø³ÙƒÙ†Ø¯Ø±ÙŠØ©", // Alexandria
-  "Ø§Ù„Ø´Ø§Ø±Ù‚Ø©", // Sharjah
-  "Ø§Ù„Ø¯Ù…Ø§Ù…", // Dammam
-  "Ù…ÙƒØ©", // Mecca
-  "Ø§Ù„Ù…Ø¯ÙŠÙ†Ø©", // Medina
-];
+// Arabic city names returned by APIs like JSearch, mapped to the English
+// spelling used everywhere else. Without this the two spellings of one city
+// count as two separate cities in Providers by City.
+const ARABIC_CITY_TO_CANONICAL: Record<string, string> = {
+  "Ø¹Ù…Ù‘Ø§Ù†": "Amman",
+  "Ø¹Ù…Ø§Ù†": "Amman",
+  "Ø¥Ø±Ø¨Ø¯": "Irbid",
+  "Ø§Ù„Ø²Ø±Ù‚Ø§Ø¡": "Zarqa",
+  "Ø§Ù„Ø¹Ù‚Ø¨Ø©": "Aqaba",
+  "Ø§Ù„Ø±ÙŠØ§Ø¶": "Riyadh",
+  "Ø¬Ø¯Ø©": "Jeddah",
+  "Ø¬Ø¯Ù‡": "Jeddah",
+  "Ø¯Ø¨ÙŠ": "Dubai",
+  "Ø£Ø¨ÙˆØ¸Ø¨ÙŠ": "Abu Dhabi",
+  "Ø£Ø¨Ùˆ Ø¸Ø¨ÙŠ": "Abu Dhabi",
+  "Ø§Ù„Ø¯ÙˆØ­Ø©": "Doha",
+  "Ø§Ù„Ù…Ù†Ø§Ù…Ø©": "Manama",
+  "Ø§Ù„ÙƒÙˆÙŠØª": "Kuwait City",
+  "Ù…Ø³Ù‚Ø·": "Muscat",
+  "Ø¨ØºØ¯Ø§Ø¯": "Baghdad",
+  "Ø£Ø±Ø¨ÙŠÙ„": "Erbil",
+  "Ø¨ÙŠØ±ÙˆØª": "Beirut",
+  "Ø§Ù„Ù‚Ø§Ù‡Ø±Ø©": "Cairo",
+  "Ø§Ù„Ø¥Ø³ÙƒÙ†Ø¯Ø±ÙŠØ©": "Alexandria",
+  "Ø§Ù„Ø´Ø§Ø±Ù‚Ø©": "Sharjah",
+  "Ø§Ù„Ø¯Ù…Ø§Ù…": "Dammam",
+  "Ù…ÙƒØ©": "Mecca",
+  "Ø§Ù„Ù…Ø¯ÙŠÙ†Ø©": "Medina",
+};
+
+const ARABIC_CITY_NAMES = Object.keys(ARABIC_CITY_TO_CANONICAL);
 
 const NON_ME_INDICATORS = [
   "new york", "california", "texas", "florida", "chicago", "los angeles",

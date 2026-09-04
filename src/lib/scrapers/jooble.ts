@@ -1,6 +1,6 @@
 import { BaseScraper } from "./base-scraper";
 import type { Job } from "../types";
-import { generateJobId, getCityCoordinates, normalizeCategory } from "../utils";
+import { generateJobId, getCityCoordinates, normalizeCategory, normalizeCity } from "../utils";
 
 // Jooble API uses a single endpoint with location specifying the country/city
 const COUNTRY_CONFIG: Record<string, { location: string }> = {
@@ -108,7 +108,7 @@ export class JoobleScraper extends BaseScraper {
           company,
           location: loc,
           country,
-          city: loc.split(",")[0]?.trim() || "",
+          city: normalizeCity(loc.split(",")[0]),
           category: normalizeCategory(item.title),
           description: item.snippet?.substring(0, 200) || item.title,
           salary: item.salary || null,

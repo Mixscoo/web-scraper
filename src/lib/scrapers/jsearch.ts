@@ -1,6 +1,6 @@
 import { BaseScraper } from "./base-scraper";
 import type { Job } from "../types";
-import { generateJobId, getCityCoordinates, normalizeCategory } from "../utils";
+import { generateJobId, getCityCoordinates, normalizeCategory, normalizeCity } from "../utils";
 
 const COUNTRY_CONFIG: Record<string, { query_location: string; country_code: string }> = {
   jordan: { query_location: "Jordan", country_code: "JO" },
@@ -126,7 +126,7 @@ export class JSearchScraper extends BaseScraper {
           company: item.employer_name,
           location: location || country,
           country,
-          city: item.job_city || "",
+          city: normalizeCity(item.job_city),
           category: normalizeCategory(item.job_title),
           description: item.job_description?.substring(0, 200) || item.job_title,
           salary: formatSalary(item),

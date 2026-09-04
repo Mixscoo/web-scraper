@@ -1,6 +1,6 @@
 import { BaseScraper } from "./base-scraper";
 import type { Job } from "../types";
-import { generateJobId, getCityCoordinates, normalizeCategory, extractSalary } from "../utils";
+import { generateJobId, getCityCoordinates, normalizeCategory, extractSalary, normalizeCity } from "../utils";
 
 const COUNTRY_MAP: Record<string, { name: string; location: string }> = {
   jordan: { name: "Jordan", location: "Amman, Jordan" },
@@ -152,7 +152,7 @@ export class LinkedInScraper extends BaseScraper {
               company,
               location: loc || config.name,
               country,
-              city: loc.split(",")[0]?.trim() || "",
+              city: normalizeCity(loc.split(",")[0]),
               category: normalizeCategory(title),
               description: title,
               salary: extractSalary(title),

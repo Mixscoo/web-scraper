@@ -1,7 +1,7 @@
 import * as cheerio from "cheerio";
 import { BaseScraper } from "./base-scraper";
 import type { Job } from "../types";
-import { extractSalary, generateJobId, getCityCoordinates, normalizeCategory } from "../utils";
+import { extractSalary, generateJobId, getCityCoordinates, normalizeCategory, normalizeCity } from "../utils";
 
 const BASE_URL = "https://classifieds.gulfnews.com";
 const LIST_URL = `${BASE_URL}/jobs/`;
@@ -64,7 +64,9 @@ function detectUaeCity(text: string): string {
       return matcher.city;
     }
   }
-  return "UAE";
+  // No city matched. "UAE" is the country, not a city — leave it unknown rather
+  // than inventing a bar for it in Providers by City.
+  return "";
 }
 
 function parsePublishedDate(text: string): string | null {
@@ -211,7 +213,7 @@ export class GulfNewsScraper extends BaseScraper {
         }
 
         const city = detectUaeCity(`${detail.location} ${detail.description} ${cardText}`);
-        const location = detail.location || (city === "UAE" ? "UAE" : `${city}, UAE`);
+        const location = detail.location || (city ? `${city}, UAE` : "UAE");
         const company = detail.company || companyFromCard;
         const category = normalizeCategory(`${title} ${sector}`);
         if (broadQuery && category === "other") {
@@ -224,7 +226,7 @@ export class GulfNewsScraper extends BaseScraper {
           company,
           location,
           country: "UAE",
-          city,
+          city: normalizeCity(city),
           category,
           description: (detail.description || combinedText).slice(0, 500),
           salary: detail.salary || extractSalary(`${title} ${cardText}`),

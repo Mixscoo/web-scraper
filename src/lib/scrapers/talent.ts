@@ -1,6 +1,6 @@
 import { BaseScraper } from "./base-scraper";
 import type { Job } from "../types";
-import { generateJobId, getCityCoordinates, normalizeCategory, extractSalary } from "../utils";
+import { generateJobId, getCityCoordinates, normalizeCategory, extractSalary, normalizeCity } from "../utils";
 
 // Country subdomains/fallbacks for talent.com
 const COUNTRY_CONFIG: Record<string, { subdomain: string; location: string }> = {
@@ -97,7 +97,7 @@ export class TalentScraper extends BaseScraper {
             company,
             location: loc || country,
             country,
-            city: loc.split(",")[0]?.trim() || "",
+            city: normalizeCity(loc.split(",")[0]),
             category: normalizeCategory(title),
             description: title,
             salary: extractSalary(title),

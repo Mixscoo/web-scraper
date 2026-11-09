@@ -2,16 +2,22 @@ import { OpenAI } from "openai";
 import { CATEGORIES } from "./constants";
 
 // Ideally use a fast and cheap model like 4o-mini
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  baseURL: "https://z.apiyihe.org/v1", // Custom proxy endpoint
-  // Batches run sequentially inside scrapeAll, and the SDK defaults to a
-  // 10-minute timeout with 2 retries — an unresponsive proxy could stall a
-  // scrape for half an hour. Categorization is a best-effort fallback, so fail
-  // fast and let the caller drop back to "other".
-  timeout: 20_000,
-  maxRetries: 1,
-});
+// Created on first use: building the module at import time throws when the
+// key is absent (e.g. during `next build` on Cloudflare).
+let client: OpenAI | null = null;
+function getClient(): OpenAI {
+  client ??= new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+    baseURL: "https://z.apiyihe.org/v1", // Custom proxy endpoint
+    // Batches run sequentially inside scrapeAll, and the SDK defaults to a
+    // 10-minute timeout with 2 retries — an unresponsive proxy could stall a
+    // scrape for half an hour. Categorization is a best-effort fallback, so fail
+    // fast and let the caller drop back to "other".
+    timeout: 20_000,
+    maxRetries: 1,
+  });
+  return client;
+}
 
 export async function categorizeOtherJobs(titles: string[]): Promise<string[]> {
   if (titles.length === 0) return [];
@@ -47,7 +53,7 @@ Job Titles to categorize:
 ${JSON.stringify(titles, null, 2)}`;
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = await getClient().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" },

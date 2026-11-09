@@ -61,3 +61,8 @@ naukri.html
 
 # runtime data (source health records)
 /data/
+
+# cloudflare / opennext
+/.open-next/
+/.wrangler/
+.dev.vars*
